@@ -1,0 +1,392 @@
+---
+title: "SLE'22"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(pbapply)
+library(ggplot2)
+library(signatr)
+library(tidyverse)
+library(qs)
+library(DT)
+library(purrr)
+
+source("latextags.R")
+```
+
+```{r}
+create_tags("experiment-uf.tex", prefix = "UF", default = TRUE)
+```
+
+
+## Load traces
+
+```{r}
+all_traces_raw <- traces_load("data/all-traces.qs")
+all_traces_stats <- traces_stats(all_traces_raw) %>%
+  mutate(pkg=str_replace(fun_name, "(.*)::.*", "\\1")) %>%
+  anti_join(tibble(pkg=c("ADGofTest","brew","classInt","corrplot","DEoptim","docopt")))
+
+all_traces <- semi_join(all_traces_raw, all_traces_stats, by="fun_name")
+all_traces_stats <- traces_stats(all_traces)  %>%
+  mutate(
+    pkg=str_replace(fun_name, "(.*)::.*", "\\1"),
+    fun=str_replace(fun_name, ".*::(.*)", "\\1")
+  )
+
+all_traces_stats_summary <- summary(all_traces_stats)
+
+fuzz_error_messages <- count(filter(all_traces, !is.na(error)), error)
+```
+
+```{r}
+traces <- filter(all_traces, status == 0)
+traces_stats <- traces_stats(traces)
+traces_stats_summary <- summary(traces_stats)
+```
+
+
+```
+x <- mutate(all_traces_stats, pkg=str_replace(fun_name, "(.*)::.*", "\\1")) %>% group_by(pkg) %>% 
+  summarise(funs=n(), succ=sum(success > 0), ratio=succ/funs) %>% 
+  arrange(ratio) %>%
+  mutate(cs=cumsum(ratio))
+```
+
+
+## Fuzzing experiment
+
+Fix the output from parallel:
+
+```
+cat data/run-corpus-2.csv| rg -v '^\d+ ' | rg -v '^\s+' | rg -v '^$' | rg -v '^Warning:' | rg -v '^by .GlobalEnv' | rg -v '^trace' | rg -v '^}' >! data/run-corpus-2-processed.csv
+```
+
+```{r}
+run1 <- read_csv(
+  "data/run-corpus-1-processed.csv", 
+  col_types = cols(
+    Seq = col_integer(),
+    Host = col_character(),
+    Starttime = col_double(),
+    JobRuntime = col_double(),
+    Send = col_double(),
+    Receive = col_double(),
+    Exitval = col_integer(),
+    Signal = col_integer(),
+    Command = col_character(),
+    V1 = col_character(),
+    V2 = col_character(),
+    Stdout = col_character(),
+    Stderr = col_character()
+  )
+) %>%
+  semi_join(all_traces_stats, by=c("V1"="pkg"))
+
+run2 <- read_csv(
+  "data/run-corpus-2-processed.csv", 
+  col_types = cols(
+    Seq = col_integer(),
+    Host = col_character(),
+    Starttime = col_double(),
+    JobRuntime = col_double(),
+    Send = col_double(),
+    Receive = col_double(),
+    Exitval = col_integer(),
+    Signal = col_integer(),
+    Command = col_character(),
+    V1 = col_character(),
+    V2 = col_character(),
+    Stdout = col_character(),
+    Stderr = col_character()
+  )
+) %>%
+  semi_join(all_traces_stats, by=c("V1"="pkg"))
+
+run <- bind_rows(run1, run2)
+```
+
+
+```{r}
+run1_duration <- lubridate::duration(max(run1$Starttime+run1$JobRuntime) - min(run1$Starttime))
+run2_duration <- lubridate::duration(max(run2$Starttime+run2$JobRuntime) - min(run2$Starttime))
+run_duration <- run1_duration + run2_duration
+```
+
+
+```{r}
+overview_table(
+  r("Tracing budget", 5000),
+  r("Tracing time", run_duration),
+  r("Num traces", all_traces),
+  r("Num success traces", traces),
+  r("Ratio sucesss traces", ratio(traces, all_traces)),
+  r("Num packages", all_traces_stats_summary$num_pkgs),
+  r("Num functions", all_traces_stats_summary$num_funs),
+  r("Num success packages", traces_stats_summary$num_pkgs),
+  r("Num success functions", traces_stats_summary$num_funs),
+  r("Ration success functions", ratio(traces_stats_summary$num_funs, all_traces_stats_summary$num_funs)),
+  r("Num crashed R sessions", filter(all_traces, status >= 2)),
+  r("Num error messages", fuzz_error_messages)
+)
+```
+
+## Baseline Types
+
+```{r}
+FILE_BASELINE_TYPES <- "data/preprocessed/baseline-types.qs"
+
+if (file.exists(FILE_BASELINE_TYPES)) {
+  baseline_types <- qs::qread(FILE_BASELINE_TYPES)
+} else {
+  baseline_types_raw <- 
+    unlist(pblapply(list.files("data/baseline-types", pattern = "\\.R$", full.names = TRUE, recursive = FALSE), qs::qread), recursive = FALSE) %>%
+    pblapply(function(x) select(x, fun_name, signature))
+  
+  baseline_types <- pblapply(
+    names(baseline_types_raw), 
+    function(x) bind_rows(baseline_types_raw[names(baseline_types_raw) == x])
+  ) %>% bind_rows()
+  
+  baseline_types <- semi_join(baseline_types, all_traces_stats, by="fun_name") %>% distinct(fun_name, signature)
+  qs::qsave(baseline_types, FILE_BASELINE_TYPES)
+}
+```
+
+## Signatr Types
+
+```{r}
+FILE_FUZZ_TYPES <- "data/preprocessed/fuzz-types.qs"
+
+if (file.exists(FILE_FUZZ_TYPES)) {
+  fuzz_types <- qs::qread(FILE_FUZZ_TYPES)
+} else {
+  fuzz_types_raw <- 
+    unlist(pblapply(list.files("data/types", pattern = ".*::.*", full.names = TRUE, recursive = FALSE), qs::qread), recursive = FALSE) %>%
+    pblapply(function(x) select(x, fun_name, signature))
+  
+  fuzz_types <- pblapply(
+    names(fuzz_types_raw), 
+    function(x) bind_rows(fuzz_types_raw[names(fuzz_types_raw) == x])
+  ) %>% bind_rows()
+  
+  fuzz_types <- semi_join(fuzz_types, all_traces_stats, by="fun_name") %>% distinct(fun_name, signature)
+  qs::qsave(fuzz_types, FILE_FUZZ_TYPES)
+}
+```
+
+TODO: what are the functions for which we have successfull calls but no signatures? Why?
+The problem is that the rdb is not saved
+
+```{r}
+signatures <- 
+  mutate(fuzz_types, fuzz=TRUE) %>%
+  full_join(mutate(baseline_types, baseline=TRUE), by=c("fun_name", "signature"))
+
+signatures_summary <-
+  group_by(signatures, fun_name) %>%
+  summarise(
+    all=n(),
+    shared=sum(!is.na(fuzz) & !is.na(baseline)),
+    only_fuzz=sum(!is.na(fuzz) & is.na(baseline)),
+    only_baseline=sum(!is.na(baseline) & is.na(fuzz)),
+    fuzz=sum(!is.na(fuzz)),
+    baseline=sum(!is.na(baseline))
+  ) %>%
+  right_join(select(all_traces_stats, fun_name), by="fun_name") %>%
+  mutate_if(is.numeric , replace_na, replace = 0)
+```
+
+```{r}
+overview_table(
+  r("Num functions with signature", filter(signatures_summary, all > 0)),
+  r("Num functions all to corpus signature ratio", ratio(filter(signatures_summary, all > 0), all_traces_stats)),
+  r("Num functions signatr signature", filter(signatures_summary, fuzz > 0)),
+  r("Num functions signatr to corpus signature ratio", ratio(filter(signatures_summary, fuzz > 0), all_traces_stats)),
+  r("Num functions baseline signature", filter(signatures_summary, baseline > 0)),
+  r("Num functions baseline to corpus signature ratio", ratio(filter(signatures_summary, baseline > 0), all_traces_stats)),
+  r("Num functions unique signatr signature", filter(signatures_summary, only_fuzz > 0)),
+  r("Num functions unique baseline signature", filter(signatures_summary, only_baseline > 0)),
+  r("Num functions only signatr signature", filter(signatures_summary, fuzz > 0, baseline == 0)),
+  r("Num functions only baseline signature", filter(signatures_summary, baseline > 0, fuzz == 0)),
+  r("Num functions fuzz new signatures over baseline", filter(signatures_summary, baseline > 0, only_fuzz > 0)),
+  r("Num functions both", filter(signatures_summary, baseline > 0, fuzz > 0)),
+  r("Signatr signatures", sum(signatures_summary$fuzz)),
+  r("Baseline signatures", sum(signatures_summary$baseline)),
+  r("All signatures", sum(signatures_summary$all)),
+  r("Shared signatures", sum(signatures_summary$shared)),
+  r("Only Baseline signatures", sum(signatures_summary$only_baseline)),
+  r("Only Signatr signatures", sum(signatures_summary$only_fuzz)),
+  r("Signatr baseline signatures ratio", sum(signatures_summary$only_fuzz)/sum(signatures_summary$only_baseline)),
+  r("Avg new signatr signature", mean(filter(signatures_summary, only_fuzz > 0)$only_fuzz)),
+  r("Shared signatues functions", filter(signatures_summary, shared > 0)),
+  r("Num Missing Function Signatr", nrow(all_traces_stats) - nrow(count(fuzz_types, fun_name)))
+)
+```
+
+## Coverage
+
+### Baseline
+
+```{r}
+extracted_code_files <- 
+  pblapply(
+    unique(all_traces_stats$pkg),
+    function(x) {
+      tibble(pkg=x, file=list.files(file.path("../data/extracted-code", pkg), recursive = TRUE, include.dirs = FALSE, pattern = "\\.R$"))
+    }
+  ) %>%
+  bind_rows %>%
+  left_join(select(all_traces_stats, pkg, fun_name), by="pkg") %>%
+  mutate(input=str_c(fun_name, "-", basename(file))) %>%
+  select(-fun_name)
+```
+
+```{r}
+FILE_BASELINE_COVERAGE <- "data/preprocessed/baseline-coverage.qs"
+FILE_BASELINE_COVERAGE_RAW <- "data/preprocessed/baseline-coverage-raw.qs"
+
+if (file.exists(FILE_BASELINE_COVERAGE_RAW)) {
+  baseline_coverage_raw <- qs::qread(FILE_BASELINE_COVERAGE_RAW)
+} else {
+  baseline_coverage_raw <- 
+    bind_rows(pblapply(list.files("data/baseline-coverage", pattern = "\\.coverage$", full.names = TRUE, recursive = FALSE), qs::qread)) %>%
+    semi_join(all_traces_stats, by="fun_name") %>%
+    mutate(input=str_c(fun_name, "-", tools::file_path_sans_ext(basename(input)))) %>%
+    left_join(select(extracted_code_files, -file), by="input") %>%
+    filter(!is.na(pkg))
+  
+  qs::qsave(baseline_coverage_raw, FILE_BASELINE_COVERAGE_RAW)
+}
+
+if (file.exists(FILE_BASELINE_COVERAGE)) {
+  baseline_coverage <- qs::qread(FILE_BASELINE_COVERAGE)
+} else {
+  baseline_coverage <-
+    baseline_coverage_raw %>%
+    group_by(pkg, fun_name) %>% summarise(lines=n(), hit=sum(value > 0), coverage=hit/lines) %>%
+    select(fun_name, coverage)
+    
+  qs::qsave(baseline_coverage, FILE_BASELINE_COVERAGE)
+}
+```
+
+### Fuzz
+
+```{r}
+FILE_FUZZ_COVERAGE <- "data/preprocessed/fuzz-coverage.qs"
+FILE_FUZZ_COVERAGE_RAW <- "data/preprocessed/fuzz-coverage-raw.qs"
+
+if (file.exists(FILE_FUZZ_COVERAGE_RAW)) {
+  fuzz_coverage_raw <- qs::qread(FILE_FUZZ_COVERAGE_RAW)
+} else {
+  fuzz_coverage_raw <- 
+    bind_rows(pblapply(list.files("data/fuzz-coverage", pattern = "\\.coverage$", full.names = TRUE, recursive = FALSE), qs::qread))
+  
+  qs::qsave(fuzz_coverage_raw, FILE_FUZZ_COVERAGE_RAW)
+}
+
+if (file.exists(FILE_FUZZ_COVERAGE)) {
+  fuzz_coverage <- qs::qread(FILE_FUZZ_COVERAGE)
+} else {
+  fuzz_coverage <-
+    fuzz_coverage_raw %>%
+    group_by(fun_name) %>% summarise(lines=n(), hit=sum(value > 0), coverage=hit/lines) %>%
+    select(fun_name, coverage)
+    
+  qs::qsave(fuzz_coverage, FILE_FUZZ_COVERAGE)
+}
+```
+
+```{r}
+coverage_raw <-
+  baseline_coverage_raw %>%
+  select(-pkg) %>%
+  group_by(fun_name, filename, line) %>%
+  summarise(value=sum(value)) %>%
+  ungroup() %>%
+  rename(baseline=value) %>%
+  left_join(
+    select(fuzz_coverage_raw, fun_name, filename, line, fuzz=value),
+    by=c("fun_name", "filename", "line")
+  )
+
+#coverage_raw %>%
+#  filter(baseline == 0, fuzz > 0) %>%
+#  count(fun_name)
+  
+coverage <-
+  select(baseline_coverage, fun_name, baseline=coverage) %>%
+  left_join(
+    select(fuzz_coverage, fun_name, fuzz=coverage), 
+    by="fun_name"
+  )
+
+better_coverage <- coverage %>%
+  filter(fuzz > baseline) %>%
+  mutate(diff = fuzz - baseline)
+
+signatures_summary_better_coverage <- semi_join(signatures_summary, better_coverage, by="fun_name")
+```
+
+```{r}
+overview_table(
+  r("Num functions with both coverage", filter(coverage, !is.na(fuzz))),
+  r("Better coverage", better_coverage),
+  r("Better coverage mean", percent(mean(better_coverage$diff))),
+  r("New signatr signatures for better coverage ratio", mean(signatures_summary_better_coverage$fuzz - signatures_summary_better_coverage$baseline))
+)
+```
+
+## Plots
+
+```{r}
+# http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+D <- signatures_summary %>%
+  transmute(fun_name, fuzz=shared + only_fuzz, baseline=shared + only_baseline, all) %>%
+  pivot_longer(c(fuzz, baseline)) %>%
+  mutate(value=ifelse(value == 0, 0, 1 + log10(value)))
+
+D_empty <- which(D$all == 0)
+
+D %>%
+ggplot(aes(x = reorder(fun_name, all, sum), color = name)) +
+    geom_linerange(data = filter(D, name == "baseline"), aes(ymin = 0, ymax = -value), size = .1, alpha = .5) +
+    geom_linerange(data = filter(D, name == "fuzz"), aes(ymin = 0, ymax = value), size = .1, alpha = .5) +
+    scale_y_continuous(
+      breaks = c(-3, -2, -1 , 0, 1, 2, 3, 4),
+      labels = function(xs) sapply(xs, function(x) ifelse(x == 0, 0, fmt(10**(abs(x) - 1))))
+    ) +
+    scale_color_manual(values = c("#D55E00", "#0072B2"), labels = c("tracing", "fuzzing")) +
+    labs(
+      x = "Functions (each line represents one function)", 
+      y = "# of unique call signatures found by tracing and fuzzing (log scale)",
+      color = ""
+    ) +
+    coord_flip() +
+    theme_minimal() +
+    theme(
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_line(linetype = "dotted", size = 0.3, color = "#3A3F4A"),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "none", #c(.7, .7),
+        legend.direction = "horizontal",
+        legend.text = element_text(size = 14)
+    ) +
+    annotate("text", x = 500, y = .5, label = "fuzzing ⇢", size = 4) +
+    annotate("text", x = 500, y = -.5, label = "⇠ tracing", size = 4)
+    #annotate("rect", xmin = min(D_empty)/2, xmax = max(D_empty)/2, ymin = -1, ymax = 1, alpha = .15) +
+    #annotate("text", x = min(D_empty)/2+(max(D_empty)/2-min(D_empty)/2)/2, y = .25, label="no signatures", size = 4, alpha = .6, fontface = "italic")
+
+ggsave("uf-call-signatures.pdf", height = 6)
+```
+
