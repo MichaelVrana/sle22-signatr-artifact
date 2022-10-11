@@ -117,6 +117,16 @@ mkdir parallel && \
   make install && \
 ```
 
+## Experimenting with the tool
+
+Run the custom R interpreter (possibly inside the docker image).
+
+```bash
+R version 4.0.2 (2020-06-22) -- "Taking Off again"
+...
+
+> library(signatr)
+```
 
 ## Use an uploaded database
 
@@ -145,32 +155,19 @@ It will also output a call id companion file in `data/callids.csv`.
 
 ## Fuzzing
 
+```bash
+./run-fuzz
+```
+
 ## Rendering the paper results
 
-## Experimenting with the tool
+We just have to render the RMkardown file. It will output an `experiment-uf.tex` file with macros for 
+all the experimental values in the paper, and pdf files for the figures of the paper.
+
+```bash
+R -e 'rmarkdown::render("sle.Rmd")'
+```
 
 
-The scripts:
 
-argtrace-r-file.sh: 
-cluster:
-coverage.R:
-experiment-uf.tex:
-find-runnable-code.R:
-fix-fuzz-rdb.R:
-fuzz.R:
-latextags.R:
-merge-traces-min.R:
-merge-traces.R:
-qcat.R:
-run-baseline.sh
-run-coverage-baseline.sh
-run-coverage-fuzz.sh
-run-fuzz.sh
-run-type-baseline.sh
-run-type.sh
-sle.Rmd
-traces-baseline.R
-type-baseline.R: takes call ids and change the structure
-type.R: infers type signature
-uf-call-signatures.pdf
+
