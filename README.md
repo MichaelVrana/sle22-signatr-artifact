@@ -9,16 +9,16 @@ be rendered to get all the results (tables, figures) we use in the paper.
 
 To use the artifact to reproduce the paper results, follow the steps:
 
-1. Install the docker image (see {Install the docker image](#install-the-docker-image)) or install locally (see [Installing locally](#installing-locally)). We strongly advise the first option.
+1. Install the docker image (see [Install the docker image](#install-the-docker-image)) or install locally (see [Installing locally](#installing-locally)). We strongly advise the first option.
 2. Generate a database (see [Generate the database](#generate-the-database)) or use an already-uploaded one  (See [Use an uploaded database](#use-an-uploaded-database)).
 3. Fuzz (see [Fuzzing](#fuzzing))
 4. Render the notebook with the paper results (see [Rendering the paper results](#rendering-the-paper-results))
 
-You can also the artifact to build a custom database and fuzz the signatures you want to in [Experimenting yourself])#experimenting-yourself).
+You can also the artifact to build a custom database and fuzz the signatures you want to in [Experimenting the tool])#experimenting-with-the-tool).
 
 ## Tool
 
-The tool is hosted at [](https://github.com/PRL-PRG/signatr) and uses the following building blocks:
+The tool is hosted at [https://github.com/PRL-PRG/signatr](https://github.com/PRL-PRG/signatr) and uses the following building blocks:
 
 
 - [sxpdb](https://github.com/PRL-PRG/sxpdb/): R value database
@@ -58,7 +58,7 @@ Add the resulting `R` binary in `bin` in your `PATH` and run the installation.
 R -e 'install.packages(readLines("/tmp/dependencies.txt"), repos="cran.r-project.org")'
 ```
 
-3. `Bison`: `contractr` requires a non-R dependency that you have to install manually: [](https://github.com/PRL-PRG/tastr) `tastr` needs Bison 3, for instance, [Bison 3.5.4](https://ftp.gnu.org/gnu/bison/bison-3.5.4.tar.gz)
+3. `Bison`: `contractr` requires a non-R dependency that you have to install manually: [https://github.com/PRL-PRG/tastr](https://github.com/PRL-PRG/tastr) `tastr` needs Bison 3, for instance, [Bison 3.5.4](https://ftp.gnu.org/gnu/bison/bison-3.5.4.tar.gz)
 4. `tastr`:
 
 ```bash
@@ -95,20 +95,82 @@ git clone https://github.com/PRL-PRG/argtracer && make -C argtracer install
 git clone https://github.com/reallyTG/generatr &&  make -C generatr install
 ```
 
-10. `signatr`:
+10. `runr`:
+
+```bash
+RUN git clone https://github.com/PRL-PRG/runr &&  make -C runr install
+```
+
+11. `signatr`:
 
 ```bash
 git clone https://github.com/PRL-PRG/signatr && make -C signatr install
 ```
 
-## Generate the database
+12. Install GNU parallel
+
+```bash
+mkdir parallel && \
+  cd parallel && \
+  curl http://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2 | tar -xjf- --strip 1 && \
+  ./configure && \
+  make install && \
+```
+
 
 ## Use an uploaded database
+
+Databases are huge, several hundreds of GB for 400 packages, so we provide a link to download it.
+
+## Generate the database
+
+The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
+
+To generate databases, you need to install some additional dependencies, including `targets`. Make sure to use the custom R interpreter `R-dyntrace`:
+
+```bash
+R -e 'install.packages(c("targets", "readr", "cvor", "future", "future.call"))'
+```
+
+The database for the SLE paper is obtained by tracing 400 packages in `data/packages.txt`.
+
+To start tracing, after opening an R session and specifying an adequate number of parallel workers:
+
+```R
+targets::tar_make_future(workers = 64)
+```
+
+The resulting database will be generated as `data/sxpdb/cran_db`.
+It will also output a call id companion file in `data/callids.csv`.
 
 ## Fuzzing
 
 ## Rendering the paper results
 
-## Experimenting yourself
+## Experimenting with the tool
 
-## 
+
+The scripts:
+
+argtrace-r-file.sh: 
+cluster:
+coverage.R:
+experiment-uf.tex:
+find-runnable-code.R:
+fix-fuzz-rdb.R:
+fuzz.R:
+latextags.R:
+merge-traces-min.R:
+merge-traces.R:
+qcat.R:
+run-baseline.sh
+run-coverage-baseline.sh
+run-coverage-fuzz.sh
+run-fuzz.sh
+run-type-baseline.sh
+run-type.sh
+sle.Rmd
+traces-baseline.R
+type-baseline.R: takes call ids and change the structure
+type.R: infers type signature
+uf-call-signatures.pdf
