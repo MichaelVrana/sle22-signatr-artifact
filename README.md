@@ -1,11 +1,12 @@
 # Signatr Artifact
 
-_We also provide an html-generated version of this README. If reading locally and not on github, we advise to use the html version._
+_We also provide  pdf and html versions of this README. If reading locally and not on github, we advise to use the pdf or html version._
 
 The artifact contains the `signatr` tool, and the pipelines to create an R value database
-and to fuzz R functions with the database to find type signatures. The fuzzing pipeline 
-will generate the inputs for the `sle.Rmd` R markdown notebook. That notebook can then 
-be rendered to get all the results (tables, figures) we use in the paper.
+and to fuzz R functions with the database to find type signatures. The pipeline to create 
+a valeu database is in `pipeline-dbgen`. The fuzzing pipeline will generate the inputs 
+for the `sle.Rmd` R markdown notebook. That notebook can then be rendered to get all
+ the results (tables, figures) we use in the paper.
 
 To use the artifact to reproduce the paper results, follow the steps:
 
