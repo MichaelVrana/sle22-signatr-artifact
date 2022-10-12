@@ -19,17 +19,18 @@ library(purrr)
 source("latextags.R")
 ```
 
-```{r}
+```{r create latex tags}
 create_tags("experiment-uf.tex", prefix = "UF", default = TRUE)
 ```
 
 ## Load traces
 
-```{r}
+First, we load all the traces:
+
+```{r load data}
 all_traces_raw <- traces_load("data/all-traces.qs")
 all_traces_stats <- traces_stats(all_traces_raw) %>%
-  mutate(pkg=str_replace(fun_name, "(.*)::.*", "\\1")) %>%
-  anti_join(tibble(pkg=c("ADGofTest","brew","classInt","corrplot","DEoptim","docopt")))
+  mutate(pkg=str_replace(fun_name, "(.*)::.*", "\\1"))
 
 all_traces <- semi_join(all_traces_raw, all_traces_stats, by="fun_name")
 all_traces_stats <- traces_stats(all_traces)  %>%
@@ -43,7 +44,7 @@ all_traces_stats_summary <- summary(all_traces_stats)
 fuzz_error_messages <- count(filter(all_traces, !is.na(error)), error)
 ```
 
-```{r}
+```{r get traces stats}
 traces <- filter(all_traces, status == 0)
 traces_stats <- traces_stats(traces)
 traces_stats_summary <- summary(traces_stats)
@@ -51,7 +52,7 @@ traces_stats_summary <- summary(traces_stats)
 
 ## Fuzzing experiment
 
-```{r}
+```{r info about fuzzing}
 overview_table(
   r("Tracing budget", 5000),
   r("Num traces", all_traces),
@@ -69,7 +70,7 @@ overview_table(
 
 ## Baseline Types
 
-```{r}
+```{r load baseline}
 FILE_BASELINE_TYPES <- "data/preprocessed/baseline-types.qs"
 
 if (file.exists(FILE_BASELINE_TYPES)) {
@@ -91,28 +92,28 @@ if (file.exists(FILE_BASELINE_TYPES)) {
 
 ## Signatr Types
 
-```{r}
+```{r load fuzz types}
 FILE_FUZZ_TYPES <- "data/preprocessed/fuzz-types.qs"
+
+if (!dir.exists(dirname(FILE_FUZZ_TYPES))) {
+  dir.create(dirname(FILE_FUZZ_TYPES), recursive = TRUE)
+}
 
 if (file.exists(FILE_FUZZ_TYPES)) {
   fuzz_types <- qs::qread(FILE_FUZZ_TYPES)
 } else {
   fuzz_types_raw <- 
-    unlist(pblapply(list.files("data/types", pattern = ".*::.*", full.names = TRUE, recursive = FALSE), qs::qread), recursive = FALSE) %>%
-    pblapply(function(x) select(x, fun_name, signature))
-  
-  fuzz_types <- pblapply(
-    names(fuzz_types_raw), 
-    function(x) bind_rows(fuzz_types_raw[names(fuzz_types_raw) == x])
-  ) %>% bind_rows()
-  
-  fuzz_types <- semi_join(fuzz_types, all_traces_stats, by="fun_name") %>% distinct(fun_name, signature)
+    pblapply(list.files("data/types", pattern = ".*::.*", full.names = TRUE, recursive = FALSE), qs::qread) %>%
+    bind_rows()
+
+  fuzz_types <- semi_join(fuzz_types_raw, all_traces_stats, by="fun_name") %>% distinct(fun_name, signature)
   qs::qsave(fuzz_types, FILE_FUZZ_TYPES)
 }
 ```
 
+## Comparison
 
-```{r}
+```{r compare signatures}
 signatures <- 
   mutate(fuzz_types, fuzz=TRUE) %>%
   full_join(mutate(baseline_types, baseline=TRUE), by=c("fun_name", "signature"))
@@ -131,7 +132,7 @@ signatures_summary <-
   mutate_if(is.numeric , replace_na, replace = 0)
 ```
 
-```{r}
+```{r overview}
 overview_table(
   r("Num functions with signature", filter(signatures_summary, all > 0)),
   r("Num functions all to corpus signature ratio", ratio(filter(signatures_summary, all > 0), all_traces_stats)),
@@ -162,7 +163,7 @@ overview_table(
 
 ### Baseline
 
-```{r}
+```{r expected coverage}
 extracted_code_files <- 
   pblapply(
     unique(all_traces_stats$pkg),
@@ -176,7 +177,7 @@ extracted_code_files <-
   select(-fun_name)
 ```
 
-```{r}
+```{r baseline coverage}
 FILE_BASELINE_COVERAGE <- "data/preprocessed/baseline-coverage.qs"
 FILE_BASELINE_COVERAGE_RAW <- "data/preprocessed/baseline-coverage-raw.qs"
 
@@ -207,7 +208,7 @@ if (file.exists(FILE_BASELINE_COVERAGE)) {
 
 ### Fuzz
 
-```{r}
+```{r fuzz coverage}
 FILE_FUZZ_COVERAGE <- "data/preprocessed/fuzz-coverage.qs"
 FILE_FUZZ_COVERAGE_RAW <- "data/preprocessed/fuzz-coverage-raw.qs"
 
@@ -215,7 +216,7 @@ if (file.exists(FILE_FUZZ_COVERAGE_RAW)) {
   fuzz_coverage_raw <- qs::qread(FILE_FUZZ_COVERAGE_RAW)
 } else {
   fuzz_coverage_raw <- 
-    bind_rows(pblapply(list.files("data/fuzz-coverage", pattern = "\\.coverage$", full.names = TRUE, recursive = FALSE), qs::qread))
+    bind_rows(pblapply(list.files("data/coverage", pattern = "\\.coverage$", full.names = TRUE, recursive = FALSE), qs::qread))
   
   qs::qsave(fuzz_coverage_raw, FILE_FUZZ_COVERAGE_RAW)
 }
@@ -232,7 +233,7 @@ if (file.exists(FILE_FUZZ_COVERAGE)) {
 }
 ```
 
-```{r}
+```{r coverage comparison}
 coverage_raw <-
   baseline_coverage_raw %>%
   select(-pkg) %>%
@@ -245,10 +246,6 @@ coverage_raw <-
     by=c("fun_name", "filename", "line")
   )
 
-#coverage_raw %>%
-#  filter(baseline == 0, fuzz > 0) %>%
-#  count(fun_name)
-  
 coverage <-
   select(baseline_coverage, fun_name, baseline=coverage) %>%
   left_join(
@@ -263,7 +260,7 @@ better_coverage <- coverage %>%
 signatures_summary_better_coverage <- semi_join(signatures_summary, better_coverage, by="fun_name")
 ```
 
-```{r}
+```{r coverage overview}
 overview_table(
   r("Num functions with both coverage", filter(coverage, !is.na(fuzz))),
   r("Better coverage", better_coverage),
@@ -274,7 +271,7 @@ overview_table(
 
 ## Plots
 
-```{r}
+```{r figure 4}
 # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 

@@ -9,3 +9,6 @@ rdb/
 run-*.csv
 sources/
 types/
+baseline/
+preprocessed/
+all-traces.qs

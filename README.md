@@ -299,6 +299,15 @@ shall show results for a function `arg_name` from `dplyr` package:
 It indicates 7 failed calls and 3 good ones.
 Please note that due to random sampling your results will likely be different.
 
+To simplify, we merge all the individual trace files into one using:
+
+```sh
+./fix-fuzz-rdb.R
+./merge-traces.R
+```
+
+which should create `data/all-traces.qs` file with properly adjusted paths.
+
 ### 3. type the results
 
 To type the traces, run the following:
@@ -360,31 +369,50 @@ data/coverage          <--- directory with the coverage output
 data/run-coverage.csv  <--- metadata about the run, duration, exitcodes, ...
 ```
 
-### 5. baseline tracing
+### 5. baseline
 
-In this steps we will run all the extracted code to create the baseline for the comparison.
+To have a comparison, we need to need to get the baseline data.
+Instead of fuzzing, we will simply run the extracted code from the packages.
+There are three steps:
 
-```sh
-./run-baseline.sh
-```
+1. run the extracted code to get the traces
+  
+    ```sh
+    ./run-baseline.sh
+    ```
 
-This will use the GNU parallel to trace all the runnable code extracted from the installed packages.
-By default, it will run 16 jobs in parallel.
+2. type the traces
+
+    ```sh
+    ./run-type-baseline.sh
+    ```
+
+3. compute the coverage from these traces
+
+    ```sh
+    ./run-coverage-baseline.sh
+    ```
+
+By default, all will run 16 jobs in parallel.
 The can be changed using the `JOBS` environment variable.
 
+The results will be in
 
-### 6. type the baseline traces
-
-
-### 7. compute baseline coverage
-
-
-### 8. create a report
-
-
-We just have to render the RMkardown file `sle.Rmd`. It will output an `experiment-uf.tex` file with macros for 
-all the experimental values in the paper, and a pdf file (`uf-call-signatures.pdf`) for Figure 4 in the paper.
-
-```bash
-R -e 'rmarkdown::render("sle.Rmd")'
 ```
+data/baseline            <--- baseline traces
+data/baseline-types      <--- baseline types
+data/baseline-coverage   <--- baseline coverage
+data/run-*-baseline.csv  <--- metadata about the runs, duration, exitcodes, ...
+```
+
+### 6. create a report
+
+Finally, to render the results, run:
+
+```sh
+R --slave --quiet -e 'rmarkdown::render("sle.Rmd")'
+```
+This should create a file `sle.html` which you can open in a browser (navigate to the directory where you run the `./enter.sh`).
+It also creates two more files:
+- `experiment-uf.tex` the data for the paper
+- `uf-call-signatures.pdf` the figure 4 in the paper

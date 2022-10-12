@@ -2,12 +2,13 @@
 
 OUTPUT=data/baseline-types
 INPUT=data/baseline
+JOBS=${JOBS:-16}
 
 mkdir -p "$OUTPUT"
 
 find $INPUT -maxdepth 1 -name '*.callids' | \
   parallel \
-    --results "$OUTPUT/run.csv" \
-    --jobs 64 \
+    --results "data/run-type-baseline.csv" \
+    --jobs $JOBS \
     --bar \
     ./type-baseline.R '{1}'

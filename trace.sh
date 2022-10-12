@@ -28,5 +28,4 @@ SXPDB=$(readlink -f $OUTPUT/$file.sxpdb)
 
 cd "$dir"
 
-/usr/bin/time -f '%x,%e,%M,%P' \
-  R --no-save --no-echo --quiet --no-readline -e "argtracer::trace_file('$file', '$OUTPUT/$file.sxpdb', '$OUTPUT/$file.callids')"
+R --no-save --no-echo --quiet --no-readline -e "argtracer::trace_file('$file', '$OUTPUT/$file.sxpdb', '$OUTPUT/$file.callids')"

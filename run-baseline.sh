@@ -8,7 +8,7 @@ mkdir -p "$OUTPUT"
 
 ./find-runnable-code.R | \
   parallel \
-    --results "$OUTPUT/run.csv" \
+    --results "data/run-baseline.csv" \
     --jobs $JOBS \
     --bar \
-    ./argtrace-r-file.sh '{1}'
+    ./trace.sh '{1}'
