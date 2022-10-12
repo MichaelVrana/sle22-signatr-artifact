@@ -1,6 +1,6 @@
 # Signatr Artifact
 
-_We also provide  pdf and html versions of this README. If reading locally and not on github, we advise to use the pdf or html version._
+_We also provide  pdf and html versions of this README. If reading locally and not on github, we advise to use the html version._
 
 The artifact contains the `signatr` tool, and the pipelines to create an R value database
 and to fuzz R functions with the database to find type signatures. The pipeline to create 
@@ -178,7 +178,7 @@ You can change `packages.txt` to include less packages. For instance, `packages-
 
 ## Rendering the paper results
 
-We just have to render the RMkardown file. It will output an `experiment-uf.tex` file with macros for 
+We just have to render the RMkardown file `sle.Rmd`. It will output an `experiment-uf.tex` file with macros for 
 all the experimental values in the paper, and a pdf file (`uf-call-signatures.pdf`) for Figure 4 in the paper.
 
 ```bash

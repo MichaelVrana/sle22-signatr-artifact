@@ -10,4 +10,4 @@ render:
 
 all: dbgen fuzz render
 
-.PHONY: dbgen fuzz render
+.PHONY: dbgen fuzz render all

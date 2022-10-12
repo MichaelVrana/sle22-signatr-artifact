@@ -1,0 +1,179 @@
+<h1 id="signatr-artifact">Signatr Artifact</h1>
+<p><em>We also provide pdf and html versions of this README. If reading
+locally and not on github, we advise to use the pdf or html
+version.</em></p>
+<p>The artifact contains the <code>signatr</code> tool, and the
+pipelines to create an R value database and to fuzz R functions with the
+database to find type signatures. The pipeline to create a valeu
+database is in <code>pipeline-dbgen</code>. The fuzzing pipeline will
+generate the inputs for the <code>sle.Rmd</code> R markdown notebook.
+That notebook can then be rendered to get all the results (tables,
+figures) we use in the paper.</p>
+<p>To use the artifact to reproduce the paper results, follow the
+steps:</p>
+<ol type="1">
+<li>Install the docker image (see <a
+href="#install-the-docker-image">Install the docker image</a>).
+Installing locally is possible but involved. Following the steps
+described in the <code>docker-image/Dockerfile</code> should help if
+this is the hard path you are choosing!</li>
+<li>Generate a database (see <a href="#generate-the-database">Generate
+the database</a>) or use an already-uploaded one (See <a
+href="#use-an-uploaded-database">Use an uploaded database</a>).</li>
+<li>Fuzz (see <a href="#fuzzing">Fuzzing</a>)</li>
+<li>Render the notebook with the paper results (see <a
+href="#rendering-the-paper-results">Rendering the paper
+results</a>)</li>
+</ol>
+<p>You can also the artifact to build a custom database and fuzz the
+signatures you want to in [Experimenting the
+tool])#experimenting-with-the-tool).</p>
+<h2 id="tool">Tool</h2>
+<p>The tool is packaged as an R library. It is hosted at <a
+href="https://github.com/PRL-PRG/signatr">https://github.com/PRL-PRG/signatr</a>
+and uses the following building blocks:</p>
+<ul>
+<li><a href="https://github.com/PRL-PRG/sxpdb/">sxpdb</a>: R value
+database</li>
+<li><a href="https://github.com/reallyTG/generatr">generatr</a>: fuzzing
+utilities</li>
+<li><a href="https://github.com/PRL-PRG/contractr">contractr</a>:type
+signature parsing and checking for R</li>
+<li><a href="https://github.com/PRL-PRG/argtracer">argtracer</a>: trace
+R values using a patched R interpreter and store them in the R value
+database.</li>
+</ul>
+<p>The tool and its dependencies are pre-installed in a convenient
+Docker image.</p>
+<h2 id="install-the-docker-image">Install the docker image</h2>
+<p>You can:</p>
+<ul>
+<li>pull the docker image with
+<code>docker pull prlprg/sle22-signatr</code>, or</li>
+<li>build the docker image (it takes time!):</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> docker-image</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span></code></pre></div>
+<p>After installing the docker image, <em>make sure</em> to run all the
+following commands in a shell inside the docker image (for Linux, macOS)
+from the artifact directory:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--rm</span> <span class="at">-ti</span> <span class="at">-v</span> <span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span>:/work <span class="at">-e</span> USER_ID=<span class="va">$(</span><span class="fu">id</span> <span class="at">-u</span><span class="va">)</span> <span class="at">-e</span> GROUP_ID=<span class="va">$(</span><span class="fu">id</span> <span class="at">-g</span><span class="va">)</span> <span class="at">-w</span> /work prlprg/sle22-signatr bash</span></code></pre></div>
+<h2 id="experimenting-with-the-tool">Experimenting with the tool</h2>
+<p>Run the R interpreter <em>inside the docker image</em>. It will start
+the patched R interpreter. The tool <em>does not run</em> in the
+standard R interpreter.</p>
+<p>In the following listings, <code>$</code> indicates the shell and
+<code>&gt;</code> denotes the R REPL.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> version 4.0.2 <span class="er">(</span><span class="ex">2020-06-22</span><span class="kw">)</span> <span class="ex">--</span> <span class="st">&quot;Taking Off again&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> library<span class="kw">(</span><span class="ex">signatr</span><span class="kw">)</span></span></code></pre></div>
+<h3 id="database">Database</h3>
+<p>To generate a database of values, we need some code to run. One way
+is to extract it from an existing R package, for example
+<code>stringr</code>, which provides regexes:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">extract_package_code</span>(<span class="st">&quot;stringr&quot;</span>, <span class="at">output_dir =</span> <span class="st">&quot;demo&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dv">7</span> examples<span class="sc">/</span>str_detect.Rd.R examples</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<p>This will extract all the runnable snippets from the package
+documentation and tests into the given directory. For example:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat demo/examples/str_detect.Rd.R</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">fruit</span> <span class="op">&lt;</span>- c<span class="er">(</span><span class="st">&quot;apple&quot;</span><span class="ex">,</span> <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>, <span class="st">&quot;pinapple&quot;</span><span class="kw">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">str_detect</span><span class="er">(</span><span class="ex">fruit,</span> <span class="st">&quot;a&quot;</span><span class="kw">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">str_detect</span><span class="er">(</span><span class="ex">fruit,</span> <span class="st">&quot;^a&quot;</span><span class="kw">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span></span></code></pre></div>
+<p>Next, we trace the file by running it (in the patched R interpreter)
+and recording all the calls, using the
+<code>trace_file</code>function:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">trace_file</span>(<span class="st">&quot;demo/examples/str_detect.Rd.R&quot;</span>, <span class="at">db_path =</span> <span class="st">&quot;demo.sxpdb&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        status time                          file    db_path db_size error</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>elapsed      <span class="dv">0</span> <span class="fl">0.04</span> demo<span class="sc">/</span>examples<span class="sc">/</span>str_detect.Rd.R demo.sxpdb      <span class="dv">20</span>    <span class="cn">NA</span></span></code></pre></div>
+<p>The database generation is also automated in the
+<code>pipeline-dbgen</code> directory in the artifact, and handles there
+tracing on multiple files and merging the results. See <a
+href="#generate-the-database">Generate the database</a> for more
+details.</p>
+<h3 id="fuzzing">Fuzzing</h3>
+<p>Once the database is ready, we can start fuzzing the
+<code>str_detect</code> function of the <code>stringr</code>
+package:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>R <span class="ot">&lt;-</span> <span class="fu">quick_fuzz</span>(<span class="st">&quot;stringr&quot;</span>, <span class="st">&quot;str_detect&quot;</span>, <span class="st">&quot;demo.sxpdb&quot;</span>, <span class="at">budget =</span> <span class="dv">100</span>, <span class="at">action =</span> <span class="st">&quot;infer&quot;</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    started a new runner<span class="sc">:</span>PROCESS <span class="st">&#39;R&#39;</span>, running, pid <span class="dv">4157</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    fuzzing stringr<span class="sc">:::</span>str_detect [<span class="sc">==</span><span class="er">====</span>] <span class="dv">100</span><span class="sc">/</span><span class="dv">100</span> (<span class="dv">100</span>%) 39s</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    stopped runner<span class="sc">:</span>PROCESS <span class="st">&#39;R&#39;</span>, running, pid <span class="dv">4157</span></span></code></pre></div>
+<p>The <code>infer</code> action will infer types for each call argument
+and return value using the type annotation language supported by
+<code>contractr</code>. It returns an R data frame with the inferred
+call signature in the <code>result</code> column:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">print</span>(R)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 100 x 6</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>args_idx      error               status result          time</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="sc">&lt;</span>list<span class="sc">&gt;</span>        <span class="er">&lt;</span>chr<span class="sc">&gt;</span>               <span class="er">&lt;</span>int<span class="sc">&gt;</span>  <span class="er">&lt;</span>chr<span class="sc">&gt;</span>           <span class="er">&lt;</span>drtn<span class="sc">&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">&lt;</span>int [<span class="dv">3</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in UseMeth...   1       NA            0.0363</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="st">2 &lt;int [3]&gt;  NA                    0    (character[],... 0.0351</span></span></code></pre></div>
+<p>If you are repeating these steps, it is possible that your results
+will be different since fuzzing is non-deterministic.</p>
+<p>The listing shows two calls: a failed one (non-zero status) with an
+error message, and a successful one with an inferred signature. The
+<code>args_idx</code> column contains the indices of the values of the
+arguments in the database: the actual argument values can be obtained by
+looking up the <code>args_idx</code> in the database:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">library</span>(sxpdb)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> db <span class="ot">&lt;-</span> <span class="fu">open_db</span>(<span class="st">&quot;demo.sxpdb&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">get_val_idx</span>(db, <span class="dv">0</span>) <span class="co"># value at index 0</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">&quot;a&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">close</span>(db)</span></code></pre></div>
+<p>One advantage of using R is that we can use R’s many data analysis
+functions. For example, we can look at the resulting signatures:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">count</span>(R, result)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 4 x 2</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>   result                                                   n</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   <span class="sc">&lt;</span>chr<span class="sc">&gt;</span>                                                  <span class="er">&lt;</span>int<span class="sc">&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> (character[], <span class="sc">^</span>character[], double) <span class="sc">=&gt;</span> <span class="er">^</span>logical[]         <span class="dv">1</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> (character[], character, integer) <span class="sc">=&gt;</span> logical[]            <span class="dv">1</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="dv">3</span> (list<span class="sc">&lt;</span>integer<span class="sc">&gt;</span>, character[], list<span class="sc">&lt;</span>integer<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> logical[]  <span class="dv">1</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="dv">4</span> <span class="cn">NA</span>                                                        <span class="dv">97</span></span></code></pre></div>
+<p>This shows that in 3 cases, the fuzzer managed to generate a call
+that was successful, and so the signatures of those calls.</p>
+<h2 id="use-an-uploaded-database">Use an uploaded database</h2>
+<p>Databases are huge, several hundreds of GB for 400 packages, so we
+provide a link to download it.</p>
+<h2 id="generate-the-database">Generate the database</h2>
+<p>The database generation uses <a
+href="https://docs.ropensci.org/targets/">targets</a> to orchestrate the
+pipeline.</p>
+<p>The database for the SLE paper is obtained by tracing 400 packages in
+<code>data/packages.txt</code>.</p>
+<p>To start tracing, after opening an R session and specifying an
+adequate number of parallel workers:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cd pipeline<span class="sc">-</span>dbgen</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make_future</span>(<span class="at">workers =</span> <span class="dv">64</span>)</span></code></pre></div>
+<p>The extracted code of the packages will be in
+<code>data/extracted-code</code>. The resulting database will be
+generated as <code>data/sxpdb/cran_db</code>. It will also output a call
+id companion file in <code>data/callids.csv</code>. Depending on your
+machine, the generation of the database for the 400 packages can take
+from a few hours to a few days.</p>
+<p>You can change <code>packages.txt</code> to include less packages.
+For instance, <code>packages-4.txt</code> includes 2 huge and common R
+packages, <code>dplyr</code> and <code>ggplot2</code>. We provide
+pre-extracted code for a few packages already, including
+<code>stringr</code>, <code>dplyr</code>, and <code>ggplot2</code>.</p>
+<h2 id="fuzzing-1">Fuzzing</h2>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-fuzz</span></span></code></pre></div>
+<h2 id="rendering-the-paper-results">Rendering the paper results</h2>
+<p>We just have to render the RMkardown file. It will output an
+<code>experiment-uf.tex</code> file with macros for all the experimental
+values in the paper, and a pdf file
+(<code>uf-call-signatures.pdf</code>) for Figure 4 in the paper.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">&#39;rmarkdown::render(&quot;sle.Rmd&quot;)&#39;</span></span></code></pre></div>
