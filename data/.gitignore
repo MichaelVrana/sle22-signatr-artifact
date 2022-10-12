@@ -12,3 +12,5 @@ types/
 baseline/
 preprocessed/
 all-traces.qs
+baseline-coverage/
+baseline-types/

@@ -6,7 +6,7 @@ JOBS=${JOBS:-16}
 
 mkdir -p "$OUTPUT"
 
-find $INPUT -maxdepth 1 -name '*.callids' | \
+find $INPUT -maxdepth 1 -name '*.traces' | \
   parallel \
     --results "data/run-type-baseline.csv" \
     --jobs $JOBS \

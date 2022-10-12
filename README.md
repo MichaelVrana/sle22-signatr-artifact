@@ -426,3 +426,9 @@ This should create a file `sle.html` which you can open in a browser (navigate t
 It also creates two more files:
 - `experiment-uf.tex` the data for the paper
 - `uf-call-signatures.pdf` the figure 4 in the paper
+
+---
+
+**Note**:
+
+- Regarding the coverage, most likely a small number of fuzzed calls won't find a new paths, so in the report you will see 0 - as to better coverage.
