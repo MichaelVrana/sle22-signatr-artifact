@@ -7,3 +7,7 @@ fuzz:
 
 render:
 	R -e 'rmarkdown::render("sle.Rmd")'
+
+all: dbgen fuzz render
+
+.PHONY: dbgen fuzz render
