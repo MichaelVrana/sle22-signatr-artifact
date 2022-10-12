@@ -9,7 +9,7 @@ be rendered to get all the results (tables, figures) we use in the paper.
 
 To use the artifact to reproduce the paper results, follow the steps:
 
-1. Install the docker image (see [Install the docker image](#install-the-docker-image)).
+1. Install the docker image (see [Install the docker image](#install-the-docker-image)). Installing locally is possible but involved. Following the steps described in the `docker-image/Dockerfile` should help if this is the hard path you are choosing!
 2. Generate a database (see [Generate the database](#generate-the-database)) or use an already-uploaded one  (See [Use an uploaded database](#use-an-uploaded-database)).
 3. Fuzz (see [Fuzzing](#fuzzing))
 4. Render the notebook with the paper results (see [Rendering the paper results](#rendering-the-paper-results))
@@ -24,7 +24,7 @@ The tool is packaged as an R library. It is hosted at [https://github.com/PRL-PR
 - [sxpdb](https://github.com/PRL-PRG/sxpdb/): R value database
 - [generatr](https://github.com/reallyTG/generatr): fuzzing utilities
 - [contractr](https://github.com/PRL-PRG/contractr):type signature parsing and checking for R
-- [argtracer](https://github.com/PRL-PRG/argtracer): trace R values and store them in the R value database.
+- [argtracer](https://github.com/PRL-PRG/argtracer): trace R values using a patched R interpreter and store them in the R value database.
 
 The tool and its dependencies are pre-installed in a convenient Docker image.
 
@@ -49,8 +49,9 @@ docker run --rm -ti -v $(pwd):/work -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -w 
 
 ## Experimenting with the tool
 
-Run the custom R interpreter (possibly inside the docker image).
-In the following listingsm `$` indicates the shell and `>`denotes the R REPL.
+Run the R interpreter *inside the docker image*. It will start the patched R interpreter. The tool *does not run* in the standard R interpreter.
+
+In the following listings, `$` indicates the shell and `>` denotes the R REPL.
 
 ```bash
 R version 4.0.2 (2020-06-22) -- "Taking Off again"
