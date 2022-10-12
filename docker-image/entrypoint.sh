@@ -6,19 +6,14 @@ GROUP="r"
 USER_ID=${USER_ID:-1000}
 GROUP_ID=${USER_ID:-1000}
 R_DIR=/R/R-dyntrace
+R_LIBS=/work/data/library
 
 ENV_FILE=/etc/environment
 
 echo "R_DIR=\"$R_DIR\"" > $ENV_FILE
 echo "PATH=\"$PATH\"" >> $ENV_FILE
-echo "OMP_NUM_THREADS=\"$OMP_NUM_THREADS\"" >> $ENV_FILE
-echo "R_COMPILE_PKGS=\"$R_COMPILE_PKGS\"" >> $ENV_FILE
-echo "R_DISABLE_BYTECODE=\"$R_DISABLE_BYTECODE\"" >> $ENV_FILE
-echo "R_ENABLE_JIT=\"$R_ENABLE_JIT\"" >> $ENV_FILE
-echo "R_KEEP_PKG_SOURCE=\"$R_KEEP_PKG_SOURCE\"" >> $ENV_FILE
-echo "SSH_AUTH_SOCK=\"$SSH_AUTH_SOCK\"" >> $ENV_FILE
 echo "IN_DOCKER=1" >> $ENV_FILE
-[[ -n "$R_LIBS" ]] && echo "R_LIBS=\"$R_LIBS\"" >> $ENV_FILE
+echo "R_LIBS=\"$R_LIBS\"" >> $ENV_FILE
 
 groupmod -g $GROUP_ID $GROUP &>/dev/null
 usermod -u $USER_ID -g $GROUP_ID $USER &>/dev/null

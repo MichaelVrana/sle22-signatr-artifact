@@ -23,7 +23,6 @@ source("latextags.R")
 create_tags("experiment-uf.tex", prefix = "UF", default = TRUE)
 ```
 
-
 ## Load traces
 
 ```{r}
@@ -50,79 +49,11 @@ traces_stats <- traces_stats(traces)
 traces_stats_summary <- summary(traces_stats)
 ```
 
-
-```
-x <- mutate(all_traces_stats, pkg=str_replace(fun_name, "(.*)::.*", "\\1")) %>% group_by(pkg) %>% 
-  summarise(funs=n(), succ=sum(success > 0), ratio=succ/funs) %>% 
-  arrange(ratio) %>%
-  mutate(cs=cumsum(ratio))
-```
-
-
 ## Fuzzing experiment
-
-Fix the output from parallel:
-
-```
-cat data/run-corpus-2.csv| rg -v '^\d+ ' | rg -v '^\s+' | rg -v '^$' | rg -v '^Warning:' | rg -v '^by .GlobalEnv' | rg -v '^trace' | rg -v '^}' >! data/run-corpus-2-processed.csv
-```
-
-```{r}
-run1 <- read_csv(
-  "data/run-corpus-1-processed.csv", 
-  col_types = cols(
-    Seq = col_integer(),
-    Host = col_character(),
-    Starttime = col_double(),
-    JobRuntime = col_double(),
-    Send = col_double(),
-    Receive = col_double(),
-    Exitval = col_integer(),
-    Signal = col_integer(),
-    Command = col_character(),
-    V1 = col_character(),
-    V2 = col_character(),
-    Stdout = col_character(),
-    Stderr = col_character()
-  )
-) %>%
-  semi_join(all_traces_stats, by=c("V1"="pkg"))
-
-run2 <- read_csv(
-  "data/run-corpus-2-processed.csv", 
-  col_types = cols(
-    Seq = col_integer(),
-    Host = col_character(),
-    Starttime = col_double(),
-    JobRuntime = col_double(),
-    Send = col_double(),
-    Receive = col_double(),
-    Exitval = col_integer(),
-    Signal = col_integer(),
-    Command = col_character(),
-    V1 = col_character(),
-    V2 = col_character(),
-    Stdout = col_character(),
-    Stderr = col_character()
-  )
-) %>%
-  semi_join(all_traces_stats, by=c("V1"="pkg"))
-
-run <- bind_rows(run1, run2)
-```
-
-
-```{r}
-run1_duration <- lubridate::duration(max(run1$Starttime+run1$JobRuntime) - min(run1$Starttime))
-run2_duration <- lubridate::duration(max(run2$Starttime+run2$JobRuntime) - min(run2$Starttime))
-run_duration <- run1_duration + run2_duration
-```
-
 
 ```{r}
 overview_table(
   r("Tracing budget", 5000),
-  r("Tracing time", run_duration),
   r("Num traces", all_traces),
   r("Num success traces", traces),
   r("Ratio sucesss traces", ratio(traces, all_traces)),
@@ -236,7 +167,7 @@ extracted_code_files <-
   pblapply(
     unique(all_traces_stats$pkg),
     function(x) {
-      tibble(pkg=x, file=list.files(file.path("../data/extracted-code", pkg), recursive = TRUE, include.dirs = FALSE, pattern = "\\.R$"))
+      tibble(pkg=x, file=list.files(file.path("data/extracted-code", pkg), recursive = TRUE, include.dirs = FALSE, pattern = "\\.R$"))
     }
   ) %>%
   bind_rows %>%
@@ -382,8 +313,6 @@ ggplot(aes(x = reorder(fun_name, all, sum), color = name)) +
     ) +
     annotate("text", x = 500, y = .5, label = "fuzzing ⇢", size = 4) +
     annotate("text", x = 500, y = -.5, label = "⇠ tracing", size = 4)
-    #annotate("rect", xmin = min(D_empty)/2, xmax = max(D_empty)/2, ymin = -1, ymax = 1, alpha = .15) +
-    #annotate("text", x = min(D_empty)/2+(max(D_empty)/2-min(D_empty)/2)/2, y = .25, label="no signatures", size = 4, alpha = .6, fontface = "italic")
 
 ggsave("uf-call-signatures.pdf", height = 6)
 ```

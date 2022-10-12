@@ -185,6 +185,220 @@ all the experimental values in the paper, and a pdf file (`uf-call-signatures.pd
 R -e 'rmarkdown::render("sle.Rmd")'
 ```
 
+## The analysis pipeline
+
+The following tutorial demonstrates how to run the analysis pipeline.
+It consists of a series of steps that at the end generates the input for the analysis.
+
+In this write up, we will run it on a small subset of the original packages (cf. `data/packages.txt`).
+The reason is that the size of the data require is fairly large. For example, just the value database is over 287GB and its generation take over half a day (on a 72 core Intel Xeon 6140 2.30GHz server).
+Also one would have to download and install all the packages and their dependencies which again takes space and time.
+If you are however insterested and have the computational resource, we will be happy to share the data, please contact the AEC chair.
+
+---
+
+**Note**:
+You will be running code downloaded from a public repository.
+CRAN is a curated repository, yet it should be done with caution.
+Run it inside the container.
+
+### Steps
+
+The following is essentially what is in the Figure 1 and Figure 2 in the paper, packaged in scripts for simpler use using GNU parallels for parallel execution.
+All steps shouls be run inside a docker container.
+To enter the container, run:
+
+```sh
+./enter.sh
+```
+
+which should give you a bash shell prompt, like (modulo the hostname):
+
+```sh
+r@eaf63037fd02:/work$
+```
+
+It automatically mounts the content of the folder from which you run the command into the `/work` directory in the container.
+
+### 0. get the sample sxpdb database
+
+For the experiment we need a value database (sxpdb database) that will be used for the fuzzing.
+You can either build one yourself, or [download](https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf) one we have prepared using the same steps.
+
+To get the prebuilt one do the following:
+
+```sh
+cd data
+wget -O cran_db.tar.xz https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf/download
+tar xvJf cran_db.tar.xz
+```
+
+The extracted database has about 10GB.
+
+To build one yourself, please run:
+
+TODO: Pierre
+
+### 1. create a corpus
+
+The corpus consists of the following:
+
+- R package sources in `data/sources`
+- installed R packages `data/library`
+- extracted code from R packages `data/extracted-code`
+- corpus metadata file  `data/corpus.csv`
+
+This is bootstrapped using the `data/packages.txt` file which contains a new-line separated list of packages to include in the corpus.
+
+To create a corpus, run the following:
+
+```sh
+./create-corpus.R
+```
+
+Depending on the number of packages (and their transitive dependencies), it might take a while.
+For the sample of 5 packages (small corpus, though of the very popular packages), it might be ~20 minutes.
+
+It could happen, that some dependencies won't install.
+
+The result should be something like:
+
+```
+data/extracted-code  <--- extracted code from R packages
+data/library         <--- installed R packages
+data/sources         <--- R package sources
+data/corpus.csv      <--- corpus metadata
+```
+
+### 2. fuzz the installed functions
+
+Next, we will run the fuzzer using the values from the sample database:
+
+```sh
+./run-fuzz.sh
+```
+
+By default this will sample 100 functions from the `corpus.csv` and fuzz each 100 times.
+Both can adjusted by setting the `FUNS` and `BUDGET` environment variables.
+Using all the functions (e.g. `FUNS=$(wc -l data/corpus.csv)` and 5000 runs (e.g. `BUDGET=5000`), the experiment might take about a day.
+That is why we recommend to scale it down.
+By default, it will run 16 jobs in parallel.
+The can be changed using the `JOBS` environment variable.
+
+The result will be:
+
+```
+data/fuzz            <--- directory with the fuzzer output
+data/run-fuzz.csv    <--- metadata about the run, duration, exitcodes, ...
+```
+
+You could view the intermediate results using the `qcat.sh` utility.
+For example:
+
+```sh
+./qcat.R 'data/fuzz/dplyr::arg_name'
+```
+
+shall show results for a function `arg_name` from `dplyr` package:
+
+```
+# A tibble: 100 × 9
+    args_idx  error        exit status dispatch     result ts    fun_n…¹ rdb_p…²
+    <list>    <chr>       <int>  <int> <list>        <int> <drt> <chr>   <chr>
+  1 <int [2]> "Error in …    NA      1 <named list>     NA 0.08… dplyr:… ../rdb…
+  2 <int [2]> "Error in …    NA      1 <named list>     NA 0.11… dplyr:… ../rdb…
+  3 <int [2]> "Error in …    NA      1 <named list>     NA 0.14… dplyr:… ../rdb…
+  4 <int [2]> "Error in …    NA      1 <named list>     NA 0.15… dplyr:… ../rdb…
+  5 <int [2]> "Error in …    NA      1 <named list>     NA 0.09… dplyr:… ../rdb…
+  6 <int [2]> "Error in …    NA      1 <named list>     NA 0.53… dplyr:… ../rdb…
+  7 <int [2]> "Error in …    NA      1 <named list>     NA 0.11… dplyr:… ../rdb…
+  8 <int [2]>  NA            NA      0 <named list>     30 0.09… dplyr:… ../rdb…
+  9 <int [2]>  NA            NA      0 <named list>     31 0.09… dplyr:… ../rdb…
+ 10 <int [2]>  NA            NA      0 <named list>     32 0.09… dplyr:… ../rdb…
+...
+```
+
+It indicates 7 failed calls and 3 good ones.
+Please note that due to random sampling your results will likely be different.
+
+### 3. type the results
+
+To type the traces, run the following:
+
+```sh
+./run-type.sh
+```
+
+By default, it will run 16 jobs in parallel.
+The can be changed using the `JOBS` environment variable.
+
+The result will be:
+
+```
+data/types            <--- directory with the type output
+data/run-type.csv     <--- metadata about the run, duration, exitcodes, ...
+```
+
+We can again peek the results:
+
+```sh
+./qcat.R 'data/types/dplyr::arg_name'
+```
+
+which should show types inferred from the fuzzed calls:
+
+```
+# A tibble: 40 × 3
+   fun_name           id signature
+   <chr>           <int> <chr>
+ 1 dplyr::arg_name     8 (list<list<class<unit, unit_v2> | double | integer> | …
+ 2 dplyr::arg_name     9 (class<gList>, list<class<factor> | double | integer>)…
+ 3 dplyr::arg_name    10 (pairlist, list<character | double[]>) => class<glue, …
+ 4 dplyr::arg_name    13 (list<list<class<matrix> | double[] | integer | intege…
+ 5 dplyr::arg_name    14 (character[], list<character | logical>) => class<glue…
+ 6 dplyr::arg_name    15 (list<class<unit, unit_v2>>, list<list<class<expectati…
+ 7 dplyr::arg_name    17 (list<class<call>>, double[]) => class<glue, character>
+ 8 dplyr::arg_name    24 (list<class<margin, simpleUnit, unit, unit_v2> | class…
+ 9 dplyr::arg_name    28 (class<matrix>, list<class<expectation_success, expect…
+10 dplyr::arg_name    30 (double, class<titleGrob, gTree, grob, gDesc>) => clas…
+```
+
+### 4. fuzz coverage
+
+Computing the function source code coverage from the fuzzed calls is done by running the following:
+
+```sh
+./run-coverage.sh
+```
+
+This will use the traced data to recreate the calls while using the [covr](https://covr.r-lib.org/) tool to record code coverage.
+By default, it will run 16 jobs in parallel.
+The can be changed using the `JOBS` environment variable.
+
+The result will be:
+
+```
+data/coverage          <--- directory with the coverage output
+data/run-coverage.csv  <--- metadata about the run, duration, exitcodes, ...
+```
+
+### 5. baseline tracing
+
+In this steps we will run all the extracted code to create the baseline for the comparison.
+
+```sh
+./run-baseline.sh
+```
+
+This will use the GNU parallel to trace all the runnable code extracted from the installed packages.
+By default, it will run 16 jobs in parallel.
+The can be changed using the `JOBS` environment variable.
 
 
+### 6. type the baseline traces
 
+
+### 7. compute baseline coverage
+
+
+### 8. create a report

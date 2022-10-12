@@ -1,19 +1,20 @@
 #!/bin/bash
 
-BUDGET=5000
+BUDGET=${BUDGET:-100}
+FUNS=${FUNS:-100}
 BASE_DIR=data/fuzz
 CORPUS=${1:-data/corpus.csv}
+JOBS=${JOBS:-16}
 
-xsv select -n 1,2 "$CORPUS" | \
+if [ -f cluster ]; then
+  EXTRA_ARGS="--sshloginfile cluster"
+fi
+
+R --slave --quiet -e 'x<-read.csv("'$CORPUS'"); x<-x[sample(1:nrow(x), '$FUNS'),]; cat(trimws(paste0(x$pkg_name, "::", x$fun_name)), sep="\n")' | \
   parallel \
-    --sshloginfile cluster \
-    --csv \
-    --results "data/run-$(basename "$CORPUS")" \
-    --jobs 64 \
+    --results "data/run-fuzz.csv" \
+    --jobs $JOBS \
     --bar \
-    --env PATH \
-    --env R_LIBS \
     --workdir $(pwd) \
-    --basefile ./fuzz.R \
     --timeout 90m \
-    /usr/bin/time -f '"%C",%x,%e,%M,%P' ./fuzz.R '{1}' '{2}' "$BUDGET"
+    ./fuzz.R '{1}' "$BUDGET"

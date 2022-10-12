@@ -1,0 +1,11 @@
+corpus.csv
+coverage/
+cran_db/
+cran_db.tar.xz
+extracted-code/
+fuzz/
+library/
+rdb/
+run-*.csv
+sources/
+types/

@@ -2,6 +2,7 @@
 
 OUTPUT=data/types
 INPUT=data/fuzz
+JOBS=${JOBS:-16}
 
 mkdir -p "$OUTPUT"
 
@@ -13,10 +14,10 @@ filter() {
   done
 }
 
-find $INPUT -type f -maxdepth 1 | \
+find $INPUT -maxdepth 1 -type f | \
   filter | \
   parallel \
-    --results "$OUTPUT/run.csv" \
-    --jobs 64 \
+    --results "data/run-type.csv" \
+    --jobs $JOBS \
     --bar \
     ./type.R '{1}'

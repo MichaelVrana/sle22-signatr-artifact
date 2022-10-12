@@ -43,21 +43,27 @@ do_fuzz <- function(pkg_name, fun_name,
 }
 
 args <- commandArgs(trailingOnly = TRUE)
-pkg_name <- args[1]
-fun_name <- args[2]
-budget_runs <- if (is.null(args[3])) {
+
+if (length(args) < 1) {
+    q(save="no")
+}
+
+name <- strsplit(args[1], "::")[[1]]
+pkg_name <- name[1]
+fun_name <- name[2]
+budget_runs <- if (is.na(args[2])) {
     5000
 } else {
-    as.integer(args[3])
+    as.integer(args[2])
 }
 
 fun <- paste0(pkg_name, "::", gsub("/", "__div__", fun_name, fixed = TRUE))
 
 base_dir <- normalizePath(".", mustWork = TRUE)
 
-db_path <- file.path(base_dir, "../data/db/cran_db-6")
+db_path <- file.path(base_dir, "data/cran_db")
 origins_path <- file.path(base_dir, paste0("data/origins/", fun))
-lib_loc <- file.path(base_dir, "../pipeline-fuzzing/out/library")
+lib_loc <- file.path(base_dir, "data/library")
 lib_loc <- c(lib_loc, .libPaths())
 rdb_path <- file.path(base_dir, paste0("data/rdb/", fun))
 budget_time_s <- 60 * 60
@@ -65,10 +71,14 @@ timeout_one_call_ms <- 60 * 1000
 quiet <- FALSE
 output <- file.path(base_dir, paste0("data/fuzz/", fun))
 
+if (!dir.exists(dirname(output))) {
+    dir.create(dirname(output), recursive=TRUE)
+}
+
 origins <- tryCatch({
     qs::qread(origins_path)
 }, error = function(e) {
-    qs::qread(file.path(base_dir, "../data/db/empty-origins.qs"))
+    qs::qread(file.path(base_dir, "data/empty-origins.qs"))
 })
 
 if (dir.exists(rdb_path)) {
@@ -89,7 +99,5 @@ res <- do_fuzz(
 )
 
 res[, "rdb_path"] <- sub(file.path(base_dir, "data/rdb/"), "../rdb/", res[, "rdb_path"], fixed = TRUE)
-
-print(res)
 
 qs::qsave(res, output)

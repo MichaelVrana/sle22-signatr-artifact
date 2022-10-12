@@ -65,7 +65,7 @@ RUN git clone https://github.com/PRL-PRG/contractr && \
   make -C contractr install
 
 # install sxpdb
-RUN git clone https://github.com/PRL-PRG/sxpdb && \
+RUN git clone https://github.com/PRL-PRG/sxpdb  && \
   make -C sxpdb install
 
 # install argtracer
@@ -73,7 +73,7 @@ RUN git clone https://github.com/PRL-PRG/argtracer && \
   make -C argtracer install
 
 # install generatr
-RUN git clone https://github.com/reallyTG/generatr && \
+RUN git clone https://github.com/reallyTG/generatr  && \
   make -C generatr install
 
 # install runr
