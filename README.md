@@ -8,14 +8,11 @@ a valeu database is in `pipeline-dbgen`. The fuzzing pipeline will generate the 
 for the `sle.Rmd` R markdown notebook. That notebook can then be rendered to get all
  the results (tables, figures) we use in the paper.
 
-To use the artifact to reproduce the paper results, follow the steps:
+To use the artifact:
 
 1. Install the docker image (see [Install the docker image](#install-the-docker-image)). Installing locally is possible but involved. Following the steps described in the `docker-image/Dockerfile` should help if this is the hard path you are choosing!
-2. Generate a database (see [Generate the database](#generate-the-database)) or use an already-uploaded one  (See [Use an uploaded database](#use-an-uploaded-database)).
-3. Fuzz (see [Fuzzing](#fuzzing))
-4. Render the notebook with the paper results (see [Rendering the paper results](#rendering-the-paper-results))
-
-You can also the artifact to build a custom database and fuzz the signatures you want to in [Experimenting the tool])#experimenting-with-the-tool).
+2. Experiment with the tool on a small example: see [Experimenting the tool](#experimenting-with-the-tool)
+4. Reproduce the analysis pipeline: see [The analysis pipeline](#the-analysis-pipeline))
 
 ## Tool
 
@@ -41,8 +38,8 @@ cd docker-image
 make
 ```
 
-After installing the docker image, *make sure* to run all the following commands in a shell
-inside the docker image (for Linux, macOS) from the artifact directory:
+After installing the docker image, **make sure** to run all the following commands in a shell
+inside the docker image (for Linux, macOS) from the artifact directory. To start the docker image:
 
 ```bash
 ./enter
