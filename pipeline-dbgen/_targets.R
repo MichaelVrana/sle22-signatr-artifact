@@ -8,7 +8,7 @@ options(tidyverse.quiet = TRUE)
 options(future.wait.timeout = 15 * 60) # do not allow more than 15min for each task
 
 lib_path = normalizePath("../library", mustWork = TRUE)
-output_path = "data"
+output_path = "../data"
 extracted_output = file.path(output_path, "extracted-code")
 sxpdb_output = file.path(output_path, "sxpdb")
 r_envir = c(callr::rcmd_safe_env(),
@@ -59,7 +59,7 @@ tar_option_set(
 list(
   tar_target(
     packages_file,
-    "data/packages.txt",
+    "../data/packages.txt",
     format = "file"
   ),
   tar_target(
@@ -82,7 +82,7 @@ list(
 
   tar_target(
     blacklist_file,
-    "data/blacklist.txt",
+    "../data/blacklist.txt",
     format = "file"
   ),
   tar_target(
@@ -98,16 +98,14 @@ list(
   tar_target(
     traced_results,
     trace_file(individual_files, lib_path, sxpdb_output),
-    #format = "file",
     pattern = map(individual_files),
-    #error = "abridge",
     error = "continue",
     priority = 1
   ),
 
   tar_target(
     db_blacklist_file,
-    "data/db-blacklist.txt",
+    "../data/db-blacklist.txt",
     format = "file"
   ),
   tar_target(
@@ -129,20 +127,12 @@ list(
   ),
 
 
-  #tar_target(
-  #  run_results2,
-  #  run_file2(individual_files, lib_path, r_home = "R-4.0.2"),
-  #  pattern = map(individual_files),
-  #  cue = tar_cue(mode = "never")
-  #),
 
   tar_target(
     merged_db,
     with_progress(
       merge_db(db_paths, sxpdb_output),
-      enable = TRUE), # handlers =  handler_debug,
-    #handler_progress(format   = ":spin :current/:total (:message) [:bar] :percent in :elapsed ETA: :eta")
-    #handler_pbmcapply
+      enable = TRUE), 
     deployment = "main"
   )
 )

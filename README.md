@@ -152,7 +152,7 @@ This shows that in 3 cases, the fuzzer managed to generate a call that was succe
 
 ## The analysis pipeline
 
-The following tutorial demonstrates how to run the analysis pipeline.
+The following tutorial demonstrates how to run the analysis pipeline to reproduce the results of the paper.
 It consists of a series of steps that at the end generates the input for the analysis.
 
 In this write up, we will run it on a small subset of the original packages (cf. `data/packages.txt`).
@@ -204,19 +204,20 @@ The extracted database has about 10GB.
 
 The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
 
-The database for the SLE paper is obtained by tracing 400 packages in `data/packages.txt`.
+The database for the SLE paper is obtained by tracing 400 packages from `data/packages-typer-400.txt`.
 
 To start tracing, after opening an R session and specifying an adequate number of parallel workers:
 
 ```R
 cd pipeline-dbgen
+cp packages-typer-400.txt packages.txt
 targets::tar_make_future(workers = 64)
 ```
 
 The extracted code of the packages will be in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
 Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
 
-You can change `packages.txt` to include less packages. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
+We provide other variants of `packages.txt`. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
 
 ### 1. create a corpus
 
@@ -280,7 +281,7 @@ For example:
 
 shall show results for a function `arg_name` from `dplyr` package:
 
-```
+```R
 # A tibble: 100 × 9
     args_idx  error        exit status dispatch     result ts    fun_n…¹ rdb_p…²
     <list>    <chr>       <int>  <int> <list>        <int> <drt> <chr>   <chr>
@@ -326,7 +327,7 @@ We can again peek the results:
 
 which should show types inferred from the fuzzed calls:
 
-```
+```R
 # A tibble: 40 × 3
    fun_name           id signature
    <chr>           <int> <chr>
