@@ -1,6 +1,6 @@
 # Signatr Artifact
 
-_We also provide  pdf and html versions of this README. If reading locally and not on github, we advise to use the html version._
+**We also provide  pdf and html versions of this README. If reading locally and not on [github](https://github.com/PRL-PRG/sle22-signatr-artifact), we advise to use the html version.**
 
 The artifact contains the `signatr` tool, and the pipelines to create an R value database
 and to fuzz R functions with the database to find type signatures. The pipeline to create 
