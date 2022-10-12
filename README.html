@@ -52,7 +52,14 @@ all the following commands in a shell inside the docker image (for
 Linux, macOS) from the artifact directory. To start the docker
 image:</p>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./enter</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./enter</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> should give you a bash shell prompt, like <span class="er">(</span><span class="ex">modulo</span> the hostname<span class="kw">)</span><span class="bu">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">sh</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">r@eaf63037fd02:/work$</span></span></code></pre></div>
+<p>It automatically mounts the content of the folder from which you run
+the command into the <code>/work</code> directory in the container.</p>
 <h2 id="experimenting-with-the-tool">Experimenting with the tool</h2>
 <p>Run the R interpreter <em>inside the docker image</em>. It will start
 the patched R interpreter. The tool <em>does not run</em> in the
@@ -157,15 +164,9 @@ with caution. Run it inside the container.</p>
 <p>The following is essentially what is in the Figure 1 and Figure 2 in
 the paper, packaged in scripts for simpler use using GNU parallels for
 parallel execution. All steps shouls be run inside a docker container.
-To enter the container, run:</p>
+as a reminder, to enter the container, run:</p>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./enter.sh</span></span></code></pre></div>
-<p>which should give you a bash shell prompt, like (modulo the
-hostname):</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">r@eaf63037fd02:/work$</span></span></code></pre></div>
-<p>It automatically mounts the content of the folder from which you run
-the command into the <code>/work</code> directory in the container.</p>
 <h3 id="get-the-sample-sxpdb-database">0. get the sample sxpdb
 database</h3>
 <p>For the experiment we need a value database (sxpdb database) that
@@ -173,23 +174,26 @@ will be used for the fuzzing. You can either build one yourself, or <a
 href="https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf">download</a>
 one we have prepared using the same steps.</p>
 <p>To get the prebuilt one do the following:</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> data</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-O</span> cran_db.tar.xz https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf/download</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> xvJf cran_db.tar.xz</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> data</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-O</span> cran_db.tar.xz https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf/download</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> xvJf cran_db.tar.xz</span></code></pre></div>
 <p>The extracted database has about 10GB.</p>
 <h4 id="building-it-yourself">Building it yourself</h4>
 <p>The database generation uses <a
 href="https://docs.ropensci.org/targets/">targets</a> to orchestrate the
 pipeline.</p>
 <p>The database for the SLE paper is obtained by tracing 400 packages
-from <code>data/packages-typer-400.txt</code>.</p>
+from <code>data/packages-typer-400.txt</code>. The packages to be traced
+have to be specified in <code>data.packages.txt</code>, which contains a
+new-line separated list of packages to include in the corpus.</p>
 <p>To start tracing, after opening an R session and specifying an
 adequate number of parallel workers:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>cd pipeline<span class="sc">-</span>dbgen</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>cp packages<span class="sc">-</span>typer<span class="fl">-400.</span>txt packages.txt</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make_future</span>(<span class="at">workers =</span> <span class="dv">64</span>)</span></code></pre></div>
-<p>The extracted code of the packages will be in
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> pipeline-dbgen</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> packages-typer-400.txt packages.txt</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">&#39;targets::tar_make_future(workers = 64)&#39;</span></span></code></pre></div>
+<p>The extracted code of the packages will be located in
 <code>data/extracted-code</code>. The resulting database will be
 generated as <code>data/sxpdb/cran_db</code>. It will also output a call
 id companion file in <code>data/callids.csv</code>. Depending on your
@@ -208,17 +212,16 @@ code for a few packages already, including <code>stringr</code>,
 <li>extracted code from R packages <code>data/extracted-code</code></li>
 <li>corpus metadata file <code>data/corpus.csv</code></li>
 </ul>
-<p>This is bootstrapped using the <code>data/packages.txt</code> file
-which contains a new-line separated list of packages to include in the
-corpus.</p>
+<p>This is bootstrapped using the <code>data/packages.txt</code>
+file.</p>
 <p>To create a corpus, run the following:</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./create-corpus.R</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./create-corpus.R</span></span></code></pre></div>
 <p>Depending on the number of packages (and their transitive
 dependencies), it might take a while. For the sample of 5 packages
 (small corpus, though of the very popular packages), it might be ~20
 minutes.</p>
-<p>It could happen, that some dependencies won’t install.</p>
+<p>It could happen that some dependencies won’t install.</p>
 <p>The result should be something like:</p>
 <pre><code>data/extracted-code  &lt;--- extracted code from R packages
 data/library         &lt;--- installed R packages
@@ -228,8 +231,8 @@ data/corpus.csv      &lt;--- corpus metadata</code></pre>
 functions</h3>
 <p>Next, we will run the fuzzer using the values from the sample
 database:</p>
-<div class="sourceCode" id="cb17"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-fuzz.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-fuzz.sh</span></span></code></pre></div>
 <p>By default this will sample 100 functions from the
 <code>corpus.csv</code> and fuzz each 100 times. Both can adjusted by
 setting the <code>FUNS</code> and <code>BUDGET</code> environment
@@ -244,57 +247,57 @@ environment variable.</p>
 data/run-fuzz.csv    &lt;--- metadata about the run, duration, exitcodes, ...</code></pre>
 <p>You could view the intermediate results using the
 <code>qcat.sh</code> utility. For example:</p>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./qcat.R</span> <span class="st">&#39;data/fuzz/dplyr::arg_name&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./qcat.R</span> <span class="st">&#39;data/fuzz/dplyr::arg_name&#39;</span></span></code></pre></div>
 <p>shall show results for a function <code>arg_name</code> from
 <code>dplyr</code> package:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 100 × 9</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    args_idx  error        exit status dispatch     result ts    fun_n…¹ rdb_p…²</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="sc">&lt;</span>list<span class="sc">&gt;</span>    <span class="er">&lt;</span>chr<span class="sc">&gt;</span>       <span class="er">&lt;</span>int<span class="sc">&gt;</span>  <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>list<span class="sc">&gt;</span>        <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>drt<span class="sc">&gt;</span> <span class="er">&lt;</span>chr<span class="sc">&gt;</span>   <span class="er">&lt;</span>chr<span class="sc">&gt;</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.08… dplyr:… ../rdb…</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="st">  2 &lt;int [2]&gt; &quot;</span>Error <span class="cf">in</span> …    <span class="cn">NA</span>      <span class="dv">1</span> <span class="sc">&lt;</span>named list<span class="sc">&gt;</span>     <span class="cn">NA</span> <span class="fl">0.11</span>… dplyr<span class="sc">:</span>… ..<span class="sc">/</span>rdb…</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="dv">3</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.14… dplyr:… ../rdb…</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="st">  4 &lt;int [2]&gt; &quot;</span>Error <span class="cf">in</span> …    <span class="cn">NA</span>      <span class="dv">1</span> <span class="sc">&lt;</span>named list<span class="sc">&gt;</span>     <span class="cn">NA</span> <span class="fl">0.15</span>… dplyr<span class="sc">:</span>… ..<span class="sc">/</span>rdb…</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="dv">5</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.09… dplyr:… ../rdb…</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="st">  6 &lt;int [2]&gt; &quot;</span>Error <span class="cf">in</span> …    <span class="cn">NA</span>      <span class="dv">1</span> <span class="sc">&lt;</span>named list<span class="sc">&gt;</span>     <span class="cn">NA</span> <span class="fl">0.53</span>… dplyr<span class="sc">:</span>… ..<span class="sc">/</span>rdb…</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="dv">7</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.11… dplyr:… ../rdb…</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="st">  8 &lt;int [2]&gt;  NA            NA      0 &lt;named list&gt;     30 0.09… dplyr:… ../rdb…</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="st">  9 &lt;int [2]&gt;  NA            NA      0 &lt;named list&gt;     31 0.09… dplyr:… ../rdb…</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="st"> 10 &lt;int [2]&gt;  NA            NA      0 &lt;named list&gt;     32 0.09… dplyr:… ../rdb…</span></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="st">...</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 100 × 9</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    args_idx  error        exit status dispatch     result ts    fun_n…¹ rdb_p…²</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="sc">&lt;</span>list<span class="sc">&gt;</span>    <span class="er">&lt;</span>chr<span class="sc">&gt;</span>       <span class="er">&lt;</span>int<span class="sc">&gt;</span>  <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>list<span class="sc">&gt;</span>        <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>drt<span class="sc">&gt;</span> <span class="er">&lt;</span>chr<span class="sc">&gt;</span>   <span class="er">&lt;</span>chr<span class="sc">&gt;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.08… dplyr:… ../rdb…</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="st">  2 &lt;int [2]&gt; &quot;</span>Error <span class="cf">in</span> …    <span class="cn">NA</span>      <span class="dv">1</span> <span class="sc">&lt;</span>named list<span class="sc">&gt;</span>     <span class="cn">NA</span> <span class="fl">0.11</span>… dplyr<span class="sc">:</span>… ..<span class="sc">/</span>rdb…</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="dv">3</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.14… dplyr:… ../rdb…</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="st">  4 &lt;int [2]&gt; &quot;</span>Error <span class="cf">in</span> …    <span class="cn">NA</span>      <span class="dv">1</span> <span class="sc">&lt;</span>named list<span class="sc">&gt;</span>     <span class="cn">NA</span> <span class="fl">0.15</span>… dplyr<span class="sc">:</span>… ..<span class="sc">/</span>rdb…</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="dv">5</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.09… dplyr:… ../rdb…</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="st">  6 &lt;int [2]&gt; &quot;</span>Error <span class="cf">in</span> …    <span class="cn">NA</span>      <span class="dv">1</span> <span class="sc">&lt;</span>named list<span class="sc">&gt;</span>     <span class="cn">NA</span> <span class="fl">0.53</span>… dplyr<span class="sc">:</span>… ..<span class="sc">/</span>rdb…</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="dv">7</span> <span class="sc">&lt;</span>int [<span class="dv">2</span>]<span class="sc">&gt;</span> <span class="st">&quot;Error in …    NA      1 &lt;named list&gt;     NA 0.11… dplyr:… ../rdb…</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="st">  8 &lt;int [2]&gt;  NA            NA      0 &lt;named list&gt;     30 0.09… dplyr:… ../rdb…</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="st">  9 &lt;int [2]&gt;  NA            NA      0 &lt;named list&gt;     31 0.09… dplyr:… ../rdb…</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="st"> 10 &lt;int [2]&gt;  NA            NA      0 &lt;named list&gt;     32 0.09… dplyr:… ../rdb…</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="st">...</span></span></code></pre></div>
 <p>It indicates 7 failed calls and 3 good ones. Please note that due to
 random sampling your results will likely be different.</p>
 <h3 id="type-the-results">3. type the results</h3>
 <p>To type the traces, run the following:</p>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-type.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-type.sh</span></span></code></pre></div>
 <p>By default, it will run 16 jobs in parallel. The can be changed using
 the <code>JOBS</code> environment variable.</p>
 <p>The result will be:</p>
 <pre><code>data/types            &lt;--- directory with the type output
 data/run-type.csv     &lt;--- metadata about the run, duration, exitcodes, ...</code></pre>
 <p>We can again peek the results:</p>
-<div class="sourceCode" id="cb23"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./qcat.R</span> <span class="st">&#39;data/types/dplyr::arg_name&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./qcat.R</span> <span class="st">&#39;data/types/dplyr::arg_name&#39;</span></span></code></pre></div>
 <p>which should show types inferred from the fuzzed calls:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 40 × 3</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>   fun_name           id signature</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>   <span class="sc">&lt;</span>chr<span class="sc">&gt;</span>           <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>chr<span class="sc">&gt;</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">1</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">8</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span> <span class="er">|</span> …</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">2</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">9</span> (class<span class="sc">&lt;</span>gList<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>factor<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span>)…</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a> <span class="dv">3</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">10</span> (pairlist, list<span class="sc">&lt;</span>character <span class="sc">|</span> double[]<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, …</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a> <span class="dv">4</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">13</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span> <span class="er">|</span> double[] <span class="sc">|</span> integer <span class="sc">|</span> intege…</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a> <span class="dv">5</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">14</span> (character[], list<span class="sc">&lt;</span>character <span class="sc">|</span> logical<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue…</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a> <span class="dv">6</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">15</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span><span class="er">&gt;</span>, list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectati…</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a> <span class="dv">7</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">17</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>call<span class="sc">&gt;</span><span class="er">&gt;</span>, double[]) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, character<span class="sc">&gt;</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a> <span class="dv">8</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">24</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>margin, simpleUnit, unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> class…</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">9</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">28</span> (class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectation_success, expect…</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">30</span> (double, class<span class="sc">&lt;</span>titleGrob, gTree, grob, gDesc<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> clas…</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 40 × 3</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>   fun_name           id signature</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>   <span class="sc">&lt;</span>chr<span class="sc">&gt;</span>           <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>chr<span class="sc">&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">1</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">8</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span> <span class="er">|</span> …</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">2</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">9</span> (class<span class="sc">&lt;</span>gList<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>factor<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span>)…</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a> <span class="dv">3</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">10</span> (pairlist, list<span class="sc">&lt;</span>character <span class="sc">|</span> double[]<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, …</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a> <span class="dv">4</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">13</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span> <span class="er">|</span> double[] <span class="sc">|</span> integer <span class="sc">|</span> intege…</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a> <span class="dv">5</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">14</span> (character[], list<span class="sc">&lt;</span>character <span class="sc">|</span> logical<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue…</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a> <span class="dv">6</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">15</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span><span class="er">&gt;</span>, list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectati…</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a> <span class="dv">7</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">17</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>call<span class="sc">&gt;</span><span class="er">&gt;</span>, double[]) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, character<span class="sc">&gt;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a> <span class="dv">8</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">24</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>margin, simpleUnit, unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> class…</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">9</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">28</span> (class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectation_success, expect…</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">30</span> (double, class<span class="sc">&lt;</span>titleGrob, gTree, grob, gDesc<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> clas…</span></code></pre></div>
 <h3 id="fuzz-coverage">4. fuzz coverage</h3>
 <p>Computing the function source code coverage from the fuzzed calls is
 done by running the following:</p>
-<div class="sourceCode" id="cb25"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-coverage.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-coverage.sh</span></span></code></pre></div>
 <p>This will use the traced data to recreate the calls while using the
 <a href="https://covr.r-lib.org/">covr</a> tool to record code coverage.
 By default, it will run 16 jobs in parallel. The can be changed using
@@ -305,8 +308,8 @@ data/run-coverage.csv  &lt;--- metadata about the run, duration, exitcodes, ...<
 <h3 id="baseline-tracing">5. baseline tracing</h3>
 <p>In this steps we will run all the extracted code to create the
 baseline for the comparison.</p>
-<div class="sourceCode" id="cb27"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-baseline.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-baseline.sh</span></span></code></pre></div>
 <p>This will use the GNU parallel to trace all the runnable code
 extracted from the installed packages. By default, it will run 16 jobs
 in parallel. The can be changed using the <code>JOBS</code> environment
@@ -318,5 +321,5 @@ variable.</p>
 will output an <code>experiment-uf.tex</code> file with macros for all
 the experimental values in the paper, and a pdf file
 (<code>uf-call-signatures.pdf</code>) for Figure 4 in the paper.</p>
-<div class="sourceCode" id="cb28"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">&#39;rmarkdown::render(&quot;sle.Rmd&quot;)&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">&#39;rmarkdown::render(&quot;sle.Rmd&quot;)&#39;</span></span></code></pre></div>

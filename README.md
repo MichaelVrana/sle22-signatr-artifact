@@ -43,7 +43,14 @@ inside the docker image (for Linux, macOS) from the artifact directory. To start
 
 ```bash
 ./enter
+
+which should give you a bash shell prompt, like (modulo the hostname):
+
+```sh
+r@eaf63037fd02:/work$
 ```
+
+It automatically mounts the content of the folder from which you run the command into the `/work` directory in the container.
 
 ## Experimenting with the tool
 
@@ -168,19 +175,11 @@ Run it inside the container.
 
 The following is essentially what is in the Figure 1 and Figure 2 in the paper, packaged in scripts for simpler use using GNU parallels for parallel execution.
 All steps shouls be run inside a docker container.
-To enter the container, run:
+as a reminder, to enter the container, run:
 
 ```sh
 ./enter.sh
 ```
-
-which should give you a bash shell prompt, like (modulo the hostname):
-
-```sh
-r@eaf63037fd02:/work$
-```
-
-It automatically mounts the content of the folder from which you run the command into the `/work` directory in the container.
 
 ### 0. get the sample sxpdb database
 
