@@ -8,7 +8,7 @@ options(tidyverse.quiet = TRUE)
 options(future.wait.timeout = 15 * 60) # do not allow more than 15min for each task
 
 lib_path = normalizePath("../library", mustWork = TRUE)
-output_path = "../data"
+output_path = "output"
 extracted_output = file.path(output_path, "extracted-code")
 sxpdb_output = file.path(output_path, "sxpdb")
 r_envir = c(callr::rcmd_safe_env(),
@@ -51,8 +51,6 @@ tar_target_resilient_file <- function(name, command, pattern, ...) {
 
 tar_option_set(
   packages = c("readr", "covr", "magrittr", "dplyr", "stringr"),
-  #imports = c("sxpdb", "argtracer"),
-  #error = "continue" # always continue by default
   format = "qs"
 )
 
@@ -82,7 +80,7 @@ list(
 
   tar_target(
     blacklist_file,
-    "../data/blacklist.txt",
+    "blacklist.txt",
     format = "file"
   ),
   tar_target(
@@ -105,7 +103,7 @@ list(
 
   tar_target(
     db_blacklist_file,
-    "../data/db-blacklist.txt",
+    "db-blacklist.txt",
     format = "file"
   ),
   tar_target(

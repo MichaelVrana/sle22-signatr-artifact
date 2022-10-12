@@ -201,21 +201,21 @@ The extracted database has about 10GB.
 The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
 
 The database for the SLE paper is obtained by tracing 400 packages from `data/packages-typer-400.txt`.
-The packages to be traced have to be specified in `data.packages.txt`, which contains a new-line separated list of packages to include in the corpus.
+The packages to be traced have to be specified in `data/packages.txt`, which contains a new-line separated list of packages to include in the corpus.
 
 
 To start tracing, after opening an R session and specifying an adequate number of parallel workers:
 
 ```bash
+cp data/packages-typer-400.txt data/packages.txt
 cd pipeline-dbgen
-cp packages-typer-400.txt packages.txt
 R -e 'targets::tar_make_future(workers = 64)'
 ```
 
-The extracted code of the packages will be located in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
+The extracted code of the packages will be located in `otuput/extracted-code`. The resulting database will be generated as `output/sxpdb/cran_db`.
 Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
 
-We provide other variants of `packages.txt`. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
+We provide other variants of `packages.txt`. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. 
 
 ### 1. create a corpus
 

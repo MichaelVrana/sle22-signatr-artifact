@@ -1,8 +1,0 @@
-nb_arguments=14
-nb_functions=8
-nb_packages=2
-store=src_store.bin
-index=src_index.bin
-nb_values=13
-offsets=src_offsets.bin
-kind=locations
