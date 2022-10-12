@@ -202,16 +202,18 @@ The extracted database has about 10GB.
 The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
 
 The database for the SLE paper is obtained by tracing 400 packages from `data/packages-typer-400.txt`.
+The packages to be traced have to be specified in `data.packages.txt`, which contains a new-line separated list of packages to include in the corpus.
+
 
 To start tracing, after opening an R session and specifying an adequate number of parallel workers:
 
-```R
+```bash
 cd pipeline-dbgen
 cp packages-typer-400.txt packages.txt
-targets::tar_make_future(workers = 64)
+R -e 'targets::tar_make_future(workers = 64)'
 ```
 
-The extracted code of the packages will be in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
+The extracted code of the packages will be located in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
 Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
 
 We provide other variants of `packages.txt`. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
@@ -225,7 +227,7 @@ The corpus consists of the following:
 - extracted code from R packages `data/extracted-code`
 - corpus metadata file  `data/corpus.csv`
 
-This is bootstrapped using the `data/packages.txt` file which contains a new-line separated list of packages to include in the corpus.
+This is bootstrapped using the `data/packages.txt` file.
 
 To create a corpus, run the following:
 
@@ -236,7 +238,7 @@ To create a corpus, run the following:
 Depending on the number of packages (and their transitive dependencies), it might take a while.
 For the sample of 5 packages (small corpus, though of the very popular packages), it might be ~20 minutes.
 
-It could happen, that some dependencies won't install.
+It could happen that some dependencies won't install.
 
 The result should be something like:
 
