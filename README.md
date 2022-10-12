@@ -212,10 +212,11 @@ cd pipeline-dbgen
 R -e 'targets::tar_make_future(workers = 64)'
 ```
 
-The extracted code of the packages will be located in `otuput/extracted-code`. The resulting database will be generated as `output/sxpdb/cran_db`.
+The extracted code of the packages will be located in `output/extracted-code`. The resulting database will be generated as `output/sxpdb/cran_db`. You should move it to `data` to follow the next steps.
 Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
 
 We provide other variants of `packages.txt`. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. 
+
 
 ### 1. create a corpus
 
