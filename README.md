@@ -148,27 +148,6 @@ One advantage of using R is that we can use R's many data analysis functions. Fo
 This shows that in 3 cases, the fuzzer managed to generate a call that was successful, and
  so the signatures of those calls.
 
-## Use an uploaded database
-
-Databases are huge, several hundreds of GB for 400 packages, so we provide a link to download it.
-
-## Generate the database
-
-The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
-
-The database for the SLE paper is obtained by tracing 400 packages in `data/packages.txt`.
-
-To start tracing, after opening an R session and specifying an adequate number of parallel workers:
-
-```R
-cd pipeline-dbgen
-targets::tar_make_future(workers = 64)
-```
-
-The extracted code of the packages will be in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
-Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
-
-You can change `packages.txt` to include less packages. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
 
 ## Fuzzing
 
@@ -193,7 +172,7 @@ It consists of a series of steps that at the end generates the input for the ana
 In this write up, we will run it on a small subset of the original packages (cf. `data/packages.txt`).
 The reason is that the size of the data require is fairly large. For example, just the value database is over 287GB and its generation take over half a day (on a 72 core Intel Xeon 6140 2.30GHz server).
 Also one would have to download and install all the packages and their dependencies which again takes space and time.
-If you are however insterested and have the computational resource, we will be happy to share the data, please contact the AEC chair.
+If you are however interested and have the computational resource, we will be happy to share the data, please contact the AEC chair.
 
 ---
 
@@ -235,9 +214,23 @@ tar xvJf cran_db.tar.xz
 
 The extracted database has about 10GB.
 
-To build one yourself, please run:
+#### Building it yourself
 
-TODO: Pierre
+The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
+
+The database for the SLE paper is obtained by tracing 400 packages in `data/packages.txt`.
+
+To start tracing, after opening an R session and specifying an adequate number of parallel workers:
+
+```R
+cd pipeline-dbgen
+targets::tar_make_future(workers = 64)
+```
+
+The extracted code of the packages will be in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
+Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
+
+You can change `packages.txt` to include less packages. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
 
 ### 1. create a corpus
 
