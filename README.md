@@ -82,19 +82,70 @@ str_detect(fruit, "^a")
 ...
 ```
 
+Next, we trace the file by running it (in the patched R interpreter) and recording all the calls, using the `trace_file`function:
+
+```R
+trace_file("demo/examples/str_detect.Rd.R", db_path = "demo.sxpdb")
+
+        status time                          file    db_path db_size error
+elapsed      0 0.04 demo/examples/str_detect.Rd.R demo.sxpdb      20    NA
+```
+
 The database generation is also automated in the `pipeline-dbgen` directory in the artifact, and handles there tracing on multiple files and merging the results. See [Generate the database](#generate-the-database) for more details.
 
 ### Fuzzing
 
-Once the database is ready, we can start fuzzing the `str_detect` function:
+Once the database is ready, we can start fuzzing the `str_detect` function of the `stringr` package:
 
 ```R
-R <- quick_fuzz("stringr::str_detect", "demo.sxpdb", budget = 100, action = "infer")
+R <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 100, action = "infer")
 
     started a new runner:PROCESS 'R', running, pid 4157
     fuzzing stringr:::str_detect [======] 100/100 (100%) 39s
     stopped runner:PROCESS 'R', running, pid 4157
 ```
+
+The `infer` action will infer types for each call argument and return value using the type annotation
+language supported by `contractr`. It returns an R data frame with the inferred call signature in the
+`result` column:
+
+```R
+> print(R)
+# A tibble: 100 x 6
+args_idx      error               status result          time
+<list>        <chr>               <int>  <chr>           <drtn>
+1 <int [3]> "Error in UseMeth...   1       NA            0.0363
+2 <int [3]>  NA                    0    (character[],... 0.0351
+```
+
+If you are repeating these steps, it is possible that your results will be different since fuzzing is non-deterministic.
+
+The listing shows two calls: a failed one (non-zero status) with an error message, and a successful one
+with an inferred signature. The `args_idx` column contains the indices of the values of the arguments in
+ the database: the actual argument values can be obtained by looking up the `args_idx` in the database:
+
+```R
+> library(sxpdb)
+> db <- open_db("demo.sxpdb")
+> get_val_idx(db, 0) # value at index 0
+[1] "a"
+> close(db)
+```
+
+One advantage of using R is that we can use R's many data analysis functions. For example, we can look at the resulting signatures:
+
+```R
+> count(R, result)
+# A tibble: 4 x 2
+   result                                                   n
+   <chr>                                                  <int>
+1 (character[], ^character[], double) => ^logical[]         1
+2 (character[], character, integer) => logical[]            1
+3 (list<integer>, character[], list<integer>) => logical[]  1
+4 NA                                                        97
+```
+This shows that in 3 cases, the fuzzer managed to generate a call that was successful, and
+ so the signatures of those calls.
 
 ## Use an uploaded database
 
