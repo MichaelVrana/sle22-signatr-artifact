@@ -3,7 +3,7 @@
 locally and not on github, we advise to use the html version.</em></p>
 <p>The artifact contains the <code>signatr</code> tool, and the
 pipelines to create an R value database and to fuzz R functions with the
-database to find type signatures. The pipeline to create a valeu
+database to find type signatures. The pipeline to create a value
 database is in <code>pipeline-dbgen</code>. The fuzzing pipeline will
 generate the inputs for the <code>sle.Rmd</code> R markdown notebook.
 That notebook can then be rendered to get all the results (tables,
@@ -18,7 +18,7 @@ this is the hard path you are choosing!</li>
 <li>Experiment with the tool on a small example: see <a
 href="#experimenting-with-the-tool">Experimenting the tool</a></li>
 <li>Reproduce the analysis pipeline: see <a
-href="#the-analysis-pipeline">The analysis pipeline</a>)</li>
+href="#the-analysis-pipeline">The analysis pipeline</a></li>
 </ol>
 <h2 id="tool">Tool</h2>
 <p>The tool is packaged as an R library. It is hosted at <a
@@ -157,23 +157,30 @@ space and time. If you are however interested and have the computational
 resource, we will be happy to share the data, please contact the AEC
 chair.</p>
 <hr />
-<p><strong>Note</strong>: You will be running code downloaded from a
-public repository. CRAN is a curated repository, yet it should be done
-with caution. Run it inside the container.</p>
+<p><strong>Note</strong>: - You will be running code downloaded from a
+public repository. Despite that CRAN is a curated repository, it should
+be done with caution. Run it inside the container.</p>
+<ul>
+<li>Most steps takes a few minutes at most, long running ones are
+indicated with an estimate.</li>
+</ul>
 <h3 id="steps">Steps</h3>
 <p>The following is essentially what is in the Figure 1 and Figure 2 in
 the paper, packaged in scripts for simpler use using GNU parallels for
-parallel execution. All steps shouls be run inside a docker container.
-as a reminder, to enter the container, run:</p>
+parallel execution. All steps should be run inside a docker container.
+As a reminder, to enter the container, run:</p>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./enter.sh</span></span></code></pre></div>
+<p>Anytime you want to kill a task, it is good to exit the container and
+enter it again so all the child processes are properly killed.</p>
 <h3 id="get-the-sample-sxpdb-database">0. get the sample sxpdb
 database</h3>
 <p>For the experiment we need a value database (sxpdb database) that
-will be used for the fuzzing. You can either build one yourself, or <a
+will be used for the fuzzing. You can either <a
+href="#building-it-yourself">build one yourself</a>, or <a
 href="https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf">download</a>
 one we have prepared using the same steps.</p>
-<p>To get the prebuilt one do the following:</p>
+<p>To get the prebuilt, one do the following:</p>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> data</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-O</span> cran_db.tar.xz https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf/download</span>
@@ -185,25 +192,23 @@ href="https://docs.ropensci.org/targets/">targets</a> to orchestrate the
 pipeline.</p>
 <p>The database for the SLE paper is obtained by tracing 400 packages
 from <code>data/packages-typer-400.txt</code>. The packages to be traced
-have to be specified in <code>data.packages.txt</code>, which contains a
+have to be specified in <code>data/packages.txt</code>, which contains a
 new-line separated list of packages to include in the corpus.</p>
 <p>To start tracing, after opening an R session and specifying an
 adequate number of parallel workers:</p>
 <div class="sourceCode" id="cb13"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> pipeline-dbgen</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> packages-typer-400.txt packages.txt</span>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> data/packages-typer-400.txt data/packages.txt</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> pipeline-dbgen</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">&#39;targets::tar_make_future(workers = 64)&#39;</span></span></code></pre></div>
 <p>The extracted code of the packages will be located in
-<code>data/extracted-code</code>. The resulting database will be
-generated as <code>data/sxpdb/cran_db</code>. It will also output a call
-id companion file in <code>data/callids.csv</code>. Depending on your
-machine, the generation of the database for the 400 packages can take
-from a few hours to a few days.</p>
+<code>output/extracted-code</code>. The resulting database will be
+generated as <code>output/sxpdb/cran_db</code>. You should move it to
+<code>data</code> to follow the next steps. Depending on your machine,
+the generation of the database for the 400 packages can take from a few
+hours to a few days.</p>
 <p>We provide other variants of <code>packages.txt</code>. For instance,
 <code>packages-4.txt</code> includes 2 huge and common R packages,
-<code>dplyr</code> and <code>ggplot2</code>. We provide pre-extracted
-code for a few packages already, including <code>stringr</code>,
-<code>dplyr</code>, and <code>ggplot2</code>.</p>
+<code>dplyr</code> and <code>ggplot2</code>.</p>
 <h3 id="create-a-corpus">1. create a corpus</h3>
 <p>The corpus consists of the following:</p>
 <ul>
@@ -239,9 +244,9 @@ setting the <code>FUNS</code> and <code>BUDGET</code> environment
 variables. Using all the functions
 (e.g. <code>FUNS=$(wc -l data/corpus.csv)</code> and 5000 runs
 (e.g. <code>BUDGET=5000</code>), the experiment might take about a day.
-That is why we recommend to scale it down. By default, it will run 16
-jobs in parallel. The can be changed using the <code>JOBS</code>
-environment variable.</p>
+That is why we recommend to scale it down so it runs within 30 minutes.
+By default, it will run 16 jobs in parallel. The can be changed using
+the <code>JOBS</code> environment variable.</p>
 <p>The result will be:</p>
 <pre><code>data/fuzz            &lt;--- directory with the fuzzer output
 data/run-fuzz.csv    &lt;--- metadata about the run, duration, exitcodes, ...</code></pre>
@@ -267,37 +272,44 @@ class="sourceCode sh"><code class="sourceCode bash"><span id="cb18-1"><a href="#
 <span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="st">...</span></span></code></pre></div>
 <p>It indicates 7 failed calls and 3 good ones. Please note that due to
 random sampling your results will likely be different.</p>
+<p>To simplify, we merge all the individual trace files into one
+using:</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./fix-fuzz-rdb.R</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./merge-traces.R</span></span></code></pre></div>
+<p>which should create <code>data/all-traces.qs</code> file with
+properly adjusted paths.</p>
 <h3 id="type-the-results">3. type the results</h3>
 <p>To type the traces, run the following:</p>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-type.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-type.sh</span></span></code></pre></div>
 <p>By default, it will run 16 jobs in parallel. The can be changed using
 the <code>JOBS</code> environment variable.</p>
 <p>The result will be:</p>
 <pre><code>data/types            &lt;--- directory with the type output
 data/run-type.csv     &lt;--- metadata about the run, duration, exitcodes, ...</code></pre>
 <p>We can again peek the results:</p>
-<div class="sourceCode" id="cb22"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./qcat.R</span> <span class="st">&#39;data/types/dplyr::arg_name&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./qcat.R</span> <span class="st">&#39;data/types/dplyr::arg_name&#39;</span></span></code></pre></div>
 <p>which should show types inferred from the fuzzed calls:</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 40 × 3</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>   fun_name           id signature</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>   <span class="sc">&lt;</span>chr<span class="sc">&gt;</span>           <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>chr<span class="sc">&gt;</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">1</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">8</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span> <span class="er">|</span> …</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">2</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">9</span> (class<span class="sc">&lt;</span>gList<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>factor<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span>)…</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a> <span class="dv">3</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">10</span> (pairlist, list<span class="sc">&lt;</span>character <span class="sc">|</span> double[]<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, …</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a> <span class="dv">4</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">13</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span> <span class="er">|</span> double[] <span class="sc">|</span> integer <span class="sc">|</span> intege…</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a> <span class="dv">5</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">14</span> (character[], list<span class="sc">&lt;</span>character <span class="sc">|</span> logical<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue…</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a> <span class="dv">6</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">15</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span><span class="er">&gt;</span>, list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectati…</span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a> <span class="dv">7</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">17</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>call<span class="sc">&gt;</span><span class="er">&gt;</span>, double[]) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, character<span class="sc">&gt;</span></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a> <span class="dv">8</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">24</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>margin, simpleUnit, unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> class…</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">9</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">28</span> (class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectation_success, expect…</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">30</span> (double, class<span class="sc">&lt;</span>titleGrob, gTree, grob, gDesc<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> clas…</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 40 × 3</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>   fun_name           id signature</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>   <span class="sc">&lt;</span>chr<span class="sc">&gt;</span>           <span class="er">&lt;</span>int<span class="sc">&gt;</span> <span class="er">&lt;</span>chr<span class="sc">&gt;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a> <span class="dv">1</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">8</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span> <span class="er">|</span> …</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="dv">2</span> dplyr<span class="sc">::</span>arg_name     <span class="dv">9</span> (class<span class="sc">&lt;</span>gList<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>factor<span class="sc">&gt;</span> <span class="er">|</span> double <span class="sc">|</span> integer<span class="sc">&gt;</span>)…</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a> <span class="dv">3</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">10</span> (pairlist, list<span class="sc">&lt;</span>character <span class="sc">|</span> double[]<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, …</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a> <span class="dv">4</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">13</span> (list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span> <span class="er">|</span> double[] <span class="sc">|</span> integer <span class="sc">|</span> intege…</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a> <span class="dv">5</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">14</span> (character[], list<span class="sc">&lt;</span>character <span class="sc">|</span> logical<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue…</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a> <span class="dv">6</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">15</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>unit, unit_v2<span class="sc">&gt;</span><span class="er">&gt;</span>, list<span class="sc">&lt;</span>list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectati…</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a> <span class="dv">7</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">17</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>call<span class="sc">&gt;</span><span class="er">&gt;</span>, double[]) <span class="sc">=&gt;</span> class<span class="sc">&lt;</span>glue, character<span class="sc">&gt;</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a> <span class="dv">8</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">24</span> (list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>margin, simpleUnit, unit, unit_v2<span class="sc">&gt;</span> <span class="er">|</span> class…</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a> <span class="dv">9</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">28</span> (class<span class="sc">&lt;</span>matrix<span class="sc">&gt;</span>, list<span class="sc">&lt;</span>class<span class="sc">&lt;</span>expectation_success, expect…</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span> dplyr<span class="sc">::</span>arg_name    <span class="dv">30</span> (double, class<span class="sc">&lt;</span>titleGrob, gTree, grob, gDesc<span class="sc">&gt;</span>) <span class="sc">=&gt;</span> clas…</span></code></pre></div>
 <h3 id="fuzz-coverage">4. fuzz coverage</h3>
 <p>Computing the function source code coverage from the fuzzed calls is
 done by running the following:</p>
-<div class="sourceCode" id="cb24"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-coverage.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-coverage.sh</span></span></code></pre></div>
 <p>This will use the traced data to recreate the calls while using the
 <a href="https://covr.r-lib.org/">covr</a> tool to record code coverage.
 By default, it will run 16 jobs in parallel. The can be changed using
@@ -305,21 +317,37 @@ the <code>JOBS</code> environment variable.</p>
 <p>The result will be:</p>
 <pre><code>data/coverage          &lt;--- directory with the coverage output
 data/run-coverage.csv  &lt;--- metadata about the run, duration, exitcodes, ...</code></pre>
-<h3 id="baseline-tracing">5. baseline tracing</h3>
-<p>In this steps we will run all the extracted code to create the
-baseline for the comparison.</p>
-<div class="sourceCode" id="cb26"><pre
-class="sourceCode sh"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-baseline.sh</span></span></code></pre></div>
-<p>This will use the GNU parallel to trace all the runnable code
-extracted from the installed packages. By default, it will run 16 jobs
-in parallel. The can be changed using the <code>JOBS</code> environment
-variable.</p>
-<h3 id="type-the-baseline-traces">6. type the baseline traces</h3>
-<h3 id="compute-baseline-coverage">7. compute baseline coverage</h3>
-<h3 id="create-a-report">8. create a report</h3>
-<p>We just have to render the RMkardown file <code>sle.Rmd</code>. It
-will output an <code>experiment-uf.tex</code> file with macros for all
-the experimental values in the paper, and a pdf file
-(<code>uf-call-signatures.pdf</code>) for Figure 4 in the paper.</p>
+<h3 id="baseline">5. baseline</h3>
+<p>To have a comparison, we need to need to get the baseline data.
+Instead of fuzzing, we will simply run the extracted code from the
+packages. There are three steps:</p>
+<ol type="1">
+<li><p>run the extracted code to get the traces</p>
 <div class="sourceCode" id="cb27"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">-e</span> <span class="st">&#39;rmarkdown::render(&quot;sle.Rmd&quot;)&#39;</span></span></code></pre></div>
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-baseline.sh</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./traces-baseline.R</span></span></code></pre></div>
+<p>This might be a bit longer running - about 15 minutes.</p></li>
+<li><p>type the traces</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-type-baseline.sh</span></span></code></pre></div></li>
+<li><p>compute the coverage from these traces</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run-coverage-baseline.sh</span></span></code></pre></div>
+<p>This might be a bit longer running - about 15 minutes.</p></li>
+</ol>
+<p>By default, all will run 16 jobs in parallel. The can be changed
+using the <code>JOBS</code> environment variable.</p>
+<p>The results will be in</p>
+<pre><code>data/baseline            &lt;--- baseline traces
+data/baseline-types      &lt;--- baseline types
+data/baseline-coverage   &lt;--- baseline coverage
+data/run-*-baseline.csv  &lt;--- metadata about the runs, duration, exitcodes, ...</code></pre>
+<h3 id="create-a-report">6. create a report</h3>
+<p>Finally, to render the results, run:</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode sh"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span> <span class="at">--slave</span> <span class="at">--quiet</span> <span class="at">-e</span> <span class="st">&#39;rmarkdown::render(&quot;sle.Rmd&quot;)&#39;</span></span></code></pre></div>
+<p>This should create a file <code>sle.html</code> which you can open in
+a browser (navigate to the directory where you run the
+<code>./enter.sh</code>). It also creates two more files: -
+<code>experiment-uf.tex</code> the data for the paper -
+<code>uf-call-signatures.pdf</code> the figure 4 in the paper</p>

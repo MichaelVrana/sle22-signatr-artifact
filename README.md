@@ -4,7 +4,7 @@ _We also provide  pdf and html versions of this README. If reading locally and n
 
 The artifact contains the `signatr` tool, and the pipelines to create an R value database
 and to fuzz R functions with the database to find type signatures. The pipeline to create 
-a valeu database is in `pipeline-dbgen`. The fuzzing pipeline will generate the inputs 
+a value database is in `pipeline-dbgen`. The fuzzing pipeline will generate the inputs 
 for the `sle.Rmd` R markdown notebook. That notebook can then be rendered to get all
  the results (tables, figures) we use in the paper.
 
@@ -12,7 +12,7 @@ To use the artifact:
 
 1. Install the docker image (see [Install the docker image](#install-the-docker-image)). Installing locally is possible but involved. Following the steps described in the `docker-image/Dockerfile` should help if this is the hard path you are choosing!
 2. Experiment with the tool on a small example: see [Experimenting the tool](#experimenting-with-the-tool)
-4. Reproduce the analysis pipeline: see [The analysis pipeline](#the-analysis-pipeline))
+4. Reproduce the analysis pipeline: see [The analysis pipeline](#the-analysis-pipeline)
 
 ## Tool
 
@@ -176,8 +176,8 @@ If you are however interested and have the computational resource, we will be ha
 ### Steps
 
 The following is essentially what is in the Figure 1 and Figure 2 in the paper, packaged in scripts for simpler use using GNU parallels for parallel execution.
-All steps shouls be run inside a docker container.
-as a reminder, to enter the container, run:
+All steps should be run inside a docker container.
+As a reminder, to enter the container, run:
 
 ```sh
 ./enter.sh
@@ -188,9 +188,9 @@ Anytime you want to kill a task, it is good to exit the container and enter it a
 ### 0. get the sample sxpdb database
 
 For the experiment we need a value database (sxpdb database) that will be used for the fuzzing.
-You can either build one yourself, or [download](https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf) one we have prepared using the same steps.
+You can either [build one yourself](#building-it-yourself), or [download](https://owncloud.cesnet.cz/index.php/s/aHprMbas4haELVf) one we have prepared using the same steps.
 
-To get the prebuilt one do the following:
+To get the prebuilt, one do the following:
 
 ```sh
 cd data
