@@ -149,20 +149,6 @@ This shows that in 3 cases, the fuzzer managed to generate a call that was succe
  so the signatures of those calls.
 
 
-## Fuzzing
-
-```bash
-./run-fuzz
-```
-
-## Rendering the paper results
-
-We just have to render the RMkardown file `sle.Rmd`. It will output an `experiment-uf.tex` file with macros for 
-all the experimental values in the paper, and a pdf file (`uf-call-signatures.pdf`) for Figure 4 in the paper.
-
-```bash
-R -e 'rmarkdown::render("sle.Rmd")'
-```
 
 ## The analysis pipeline
 
@@ -395,3 +381,11 @@ The can be changed using the `JOBS` environment variable.
 
 
 ### 8. create a report
+
+
+We just have to render the RMkardown file `sle.Rmd`. It will output an `experiment-uf.tex` file with macros for 
+all the experimental values in the paper, and a pdf file (`uf-call-signatures.pdf`) for Figure 4 in the paper.
+
+```bash
+R -e 'rmarkdown::render("sle.Rmd")'
+```
