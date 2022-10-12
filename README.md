@@ -179,7 +179,7 @@ You can change `packages.txt` to include less packages. For instance, `packages-
 ## Rendering the paper results
 
 We just have to render the RMkardown file. It will output an `experiment-uf.tex` file with macros for 
-all the experimental values in the paper, and pdf files for the figures of the paper.
+all the experimental values in the paper, and a pdf file (`uf-call-signatures.pdf`) for Figure 4 in the paper.
 
 ```bash
 R -e 'rmarkdown::render("sle.Rmd")'

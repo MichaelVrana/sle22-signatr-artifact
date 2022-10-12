@@ -180,8 +180,6 @@ if (file.exists(FILE_FUZZ_TYPES)) {
 }
 ```
 
-TODO: what are the functions for which we have successfull calls but no signatures? Why?
-The problem is that the rdb is not saved
 
 ```{r}
 signatures <- 
