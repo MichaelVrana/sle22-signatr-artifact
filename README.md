@@ -167,9 +167,11 @@ If you are however interested and have the computational resource, we will be ha
 ---
 
 **Note**:
-You will be running code downloaded from a public repository.
-CRAN is a curated repository, yet it should be done with caution.
-Run it inside the container.
+- You will be running code downloaded from a public repository.
+  Despite that CRAN is a curated repository, it should be done with caution. 
+  Run it inside the container.
+  
+- Most steps takes a few minutes at most, long running ones are indicated with an estimate.
 
 ### Steps
 
@@ -180,6 +182,8 @@ as a reminder, to enter the container, run:
 ```sh
 ./enter.sh
 ```
+
+Anytime you want to kill a task, it is good to exit the container and enter it again so all the child processes are properly killed.
 
 ### 0. get the sample sxpdb database
 
@@ -260,7 +264,7 @@ Next, we will run the fuzzer using the values from the sample database:
 By default this will sample 100 functions from the `corpus.csv` and fuzz each 100 times.
 Both can adjusted by setting the `FUNS` and `BUDGET` environment variables.
 Using all the functions (e.g. `FUNS=$(wc -l data/corpus.csv)` and 5000 runs (e.g. `BUDGET=5000`), the experiment might take about a day.
-That is why we recommend to scale it down.
+That is why we recommend to scale it down so it runs within 30 minutes.
 By default, it will run 16 jobs in parallel.
 The can be changed using the `JOBS` environment variable.
 
@@ -380,7 +384,10 @@ There are three steps:
   
     ```sh
     ./run-baseline.sh
+    ./traces-baseline.R
     ```
+
+    This might be a bit longer running - about 15 minutes.
 
 2. type the traces
 
@@ -393,6 +400,8 @@ There are three steps:
     ```sh
     ./run-coverage-baseline.sh
     ```
+    
+    This might be a bit longer running - about 15 minutes.
 
 By default, all will run 16 jobs in parallel.
 The can be changed using the `JOBS` environment variable.
