@@ -1,0 +1,11 @@
+
+identical
+opts
+type.character
+type
+stri_locate_all_regex
+str_locate_all
+stri_sub
+str_sub
+cbind
+invert_match

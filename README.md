@@ -9,7 +9,7 @@ be rendered to get all the results (tables, figures) we use in the paper.
 
 To use the artifact to reproduce the paper results, follow the steps:
 
-1. Install the docker image (see [Install the docker image](#install-the-docker-image)) or install locally (see [Installing locally](#installing-locally)). We strongly advise the first option.
+1. Install the docker image (see [Install the docker image](#install-the-docker-image)).
 2. Generate a database (see [Generate the database](#generate-the-database)) or use an already-uploaded one  (See [Use an uploaded database](#use-an-uploaded-database)).
 3. Fuzz (see [Fuzzing](#fuzzing))
 4. Render the notebook with the paper results (see [Rendering the paper results](#rendering-the-paper-results))
@@ -18,7 +18,7 @@ You can also the artifact to build a custom database and fuzz the signatures you
 
 ## Tool
 
-The tool is hosted at [https://github.com/PRL-PRG/signatr](https://github.com/PRL-PRG/signatr) and uses the following building blocks:
+The tool is packaged as an R library. It is hosted at [https://github.com/PRL-PRG/signatr](https://github.com/PRL-PRG/signatr) and uses the following building blocks:
 
 
 - [sxpdb](https://github.com/PRL-PRG/sxpdb/): R value database
@@ -26,11 +26,13 @@ The tool is hosted at [https://github.com/PRL-PRG/signatr](https://github.com/PR
 - [contractr](https://github.com/PRL-PRG/contractr):type signature parsing and checking for R
 - [argtracer](https://github.com/PRL-PRG/argtracer): trace R values and store them in the R value database.
 
+The tool and its dependencies are pre-installed in a convenient Docker image.
+
 ## Install the docker image
 
 You can:
 
--  pull the docker image with `docker pull prlprg/sle22-signatr`, or
+- pull the docker image with `docker pull prlprg/sle22-signatr`, or
 - build the docker image (it takes time!): 
 
 ```bash
@@ -45,87 +47,52 @@ inside the docker image (for Linux, macOS):
 docker run --rm -ti -v $(pwd):/work -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -w /work prlprg/sle22-signatr bash
 ```
 
-## Installing locally 
-
-1. `argtracer` requires a custom R interpreter with tracing hooks. For R 4.0.2, you can 
-install it from [here](https://github.com/PRL-PRG/R-dyntrace/tree/r-4.0.2). 
-Add the resulting `R` binary in `bin` in your `PATH` and run the installation.
-
-
-2. Install some R dependencies: 
-
-```bash
-R -e 'install.packages(readLines("/tmp/dependencies.txt"), repos="cran.r-project.org")'
-```
-
-3. `Bison`: `contractr` requires a non-R dependency that you have to install manually: [https://github.com/PRL-PRG/tastr](https://github.com/PRL-PRG/tastr) `tastr` needs Bison 3, for instance, [Bison 3.5.4](https://ftp.gnu.org/gnu/bison/bison-3.5.4.tar.gz)
-4. `tastr`:
-
-```bash
-git clone https://github.com/PRL-PRG/tastr && make -C tastr build
-```
-
-5. `injectr`: 
-
-```bash 
-git clone https://github.com/PRL-PRG/injectr &&  make -C injectr install
-```
-
-6. `contractr` itself:
-
-```bash
-git clone https://github.com/PRL-PRG/contractr && make -C contractr install
-```
-
-7. `sxpdb` uses C++17 and requires at least GCC 8 to compile.
-
-```bash
-git clone https://github.com/PRL-PRG/sxpdb && make -C sxpdb install
-```
-
-8. `argtracer`:
-
-```bash
-git clone https://github.com/PRL-PRG/argtracer && make -C argtracer install
-```
-
-9. `generatr`:
-
-```bash
-git clone https://github.com/reallyTG/generatr &&  make -C generatr install
-```
-
-10. `runr`:
-
-```bash
-RUN git clone https://github.com/PRL-PRG/runr &&  make -C runr install
-```
-
-11. `signatr`:
-
-```bash
-git clone https://github.com/PRL-PRG/signatr && make -C signatr install
-```
-
-12. Install GNU parallel
-
-```bash
-mkdir parallel && \
-  cd parallel && \
-  curl http://ftp.gnu.org/gnu/parallel/parallel-latest.tar.bz2 | tar -xjf- --strip 1 && \
-  ./configure && \
-  make install && \
-```
-
 ## Experimenting with the tool
 
 Run the custom R interpreter (possibly inside the docker image).
+In the following listingsm `$` indicates the shell and `>`denotes the R REPL.
 
 ```bash
 R version 4.0.2 (2020-06-22) -- "Taking Off again"
 ...
 
 > library(signatr)
+```
+
+### Database
+
+To generate a database of values, we need some code to run. One way is to extract it from an existing R package, for example `stringr`, which provides regexes:
+
+```R
+> extract_package_code("stringr", output_dir = "demo")
+...
+7 examples/str_detect.Rd.R examples
+...
+```
+
+This will extract all the runnable snippets from the package documentation and tests into the given directory. For example:
+
+```bash
+$ cat demo/examples/str_detect.Rd.R
+...
+fruit <- c("apple", "banana", "pear", "pinapple")
+str_detect(fruit, "a")
+str_detect(fruit, "^a")
+...
+```
+
+The database generation is also automated in the `pipeline-dbgen` directory in the artifact, and handles there tracing on multiple files and merging the results. See [Generate the database](#generate-the-database) for more details.
+
+### Fuzzing
+
+Once the database is ready, we can start fuzzing the `str_detect` function:
+
+```R
+R <- quick_fuzz("stringr::str_detect", "demo.sxpdb", budget = 100, action = "infer")
+
+    started a new runner:PROCESS 'R', running, pid 4157
+    fuzzing stringr:::str_detect [======] 100/100 (100%) 39s
+    stopped runner:PROCESS 'R', running, pid 4157
 ```
 
 ## Use an uploaded database
@@ -152,6 +119,8 @@ targets::tar_make_future(workers = 64)
 
 The resulting database will be generated as `data/sxpdb/cran_db`.
 It will also output a call id companion file in `data/callids.csv`.
+
+You can change `packages.txt` to include less packages. For instance, `packages-4.txt` includes 2 huge and common R pckages, `dplyr` and `ggplot2`.
 
 ## Fuzzing
 

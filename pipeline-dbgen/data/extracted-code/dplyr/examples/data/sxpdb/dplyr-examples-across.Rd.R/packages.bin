@@ -1,0 +1,15 @@
+
+tibble
+base
+rlang
+vctrs
+pkgconfig
+dplyr
+generics
+ellipsis
+tidyselect
+glue
+magrittr
+purrr
+utils
+stats
