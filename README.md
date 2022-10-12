@@ -41,7 +41,7 @@ make
 ```
 
 After installing the docker image, *make sure* to run all the following commands in a shell
-inside the docker image (for Linux, macOS):
+inside the docker image (for Linux, macOS) from the artifact directory:
 
 ```bash
 docker run --rm -ti -v $(pwd):/work -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -w /work prlprg/sle22-signatr bash
@@ -109,6 +109,7 @@ The database for the SLE paper is obtained by tracing 400 packages in `data/pack
 To start tracing, after opening an R session and specifying an adequate number of parallel workers:
 
 ```R
+cd pipeline-dbgen
 targets::tar_make_future(workers = 64)
 ```
 
