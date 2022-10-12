@@ -103,12 +103,6 @@ Databases are huge, several hundreds of GB for 400 packages, so we provide a lin
 
 The database generation uses [targets](https://docs.ropensci.org/targets/) to orchestrate the pipeline.
 
-To generate databases, you need to install some additional dependencies, including `targets`. Make sure to use the custom R interpreter `R-dyntrace`:
-
-```bash
-R -e 'install.packages(c("targets", "readr", "cvor", "future", "future.call"))'
-```
-
 The database for the SLE paper is obtained by tracing 400 packages in `data/packages.txt`.
 
 To start tracing, after opening an R session and specifying an adequate number of parallel workers:
@@ -117,10 +111,10 @@ To start tracing, after opening an R session and specifying an adequate number o
 targets::tar_make_future(workers = 64)
 ```
 
-The resulting database will be generated as `data/sxpdb/cran_db`.
-It will also output a call id companion file in `data/callids.csv`.
+The extracted code of the packages will be in `data/extracted-code`. The resulting database will be generated as `data/sxpdb/cran_db`. It will also output a call id companion file in `data/callids.csv`.
+Depending on your machine, the generation of the database for the 400 packages can take from a few hours to a few days.
 
-You can change `packages.txt` to include less packages. For instance, `packages-4.txt` includes 2 huge and common R pckages, `dplyr` and `ggplot2`.
+You can change `packages.txt` to include less packages. For instance, `packages-4.txt` includes 2 huge and common R packages, `dplyr` and `ggplot2`. We provide pre-extracted code for a few packages already, including `stringr`, `dplyr`, and `ggplot2`.
 
 ## Fuzzing
 

@@ -12,3 +12,8 @@ qs
 roxygen2
 testthat
 tidyverse
+targets
+readr 
+covr
+future
+future.call
