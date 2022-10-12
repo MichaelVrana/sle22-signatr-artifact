@@ -45,7 +45,7 @@ After installing the docker image, *make sure* to run all the following commands
 inside the docker image (for Linux, macOS) from the artifact directory:
 
 ```bash
-docker run --rm -ti -v $(pwd):/work -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) -w /work prlprg/sle22-signatr bash
+./enter
 ```
 
 ## Experimenting with the tool
