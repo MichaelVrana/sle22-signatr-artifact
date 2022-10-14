@@ -46,7 +46,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="
 all the following commands in a shell inside the docker image (for
 Linux, macOS) from the artifact directory.</p>
 <p>To start the docker image, go back to the root directory of the
-artifact and enter:</p>
+artifact (<code>sle22-signatr-artifact/</code>) and enter in a
+shell:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./enter</span></span></code></pre></div>
 <p>which should give you a bash shell prompt, like (modulo the
@@ -107,9 +108,10 @@ package:</p>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    fuzzing stringr<span class="sc">:::</span>str_detect [<span class="sc">==</span><span class="er">====</span>] <span class="dv">100</span><span class="sc">/</span><span class="dv">100</span> (<span class="dv">100</span>%) 39s</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    stopped runner<span class="sc">:</span>PROCESS <span class="st">&#39;R&#39;</span>, running, pid <span class="dv">4157</span></span></code></pre></div>
 <p>The <code>infer</code> action will infer types for each call argument
-and return value using the type annotation language supported by
-<code>contractr</code>. It returns an R data frame with the inferred
-call signature in the <code>result</code> column:</p>
+and return value using the type annotation language described in <a
+href="https://dl.acm.org/doi/abs/10.1145/3428249">Designing types for R,
+empirically</a>. It returns an R data frame with the inferred call
+signature in the <code>result</code> column:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">print</span>(R)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 100 x 6</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>args_idx      error               status result          time</span>

@@ -46,7 +46,8 @@ $ make
 After installing the docker image, **make sure** to run all the following commands in a shell
 inside the docker image (for Linux, macOS) from the artifact directory.
 
- To start the docker image, go back to the root directory of the artifact and enter:
+ To start the docker image, go back to the root directory of the artifact (`sle22-signatr-artifact/`) 
+ and enter in a shell:
 
 ```bash
 ./enter
@@ -122,7 +123,7 @@ Once the database is ready, we can start fuzzing the `str_detect` function of th
 ```
 
 The `infer` action will infer types for each call argument and return value using the type annotation
-language supported by `contractr`. It returns an R data frame with the inferred call signature in the
+language described in [Designing types for R, empirically](https://dl.acm.org/doi/abs/10.1145/3428249). It returns an R data frame with the inferred call signature in the
 `result` column:
 
 ```R
