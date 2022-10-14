@@ -79,13 +79,12 @@ is to extract it from an existing R package, for example
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>This will extract all the runnable snippets from the package
 documentation and tests into the given directory. For example:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat demo/examples/str_detect.Rd.R</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">fruit</span> <span class="op">&lt;</span>- c<span class="er">(</span><span class="st">&quot;apple&quot;</span><span class="ex">,</span> <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>, <span class="st">&quot;pinapple&quot;</span><span class="kw">)</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">str_detect</span><span class="er">(</span><span class="ex">fruit,</span> <span class="st">&quot;a&quot;</span><span class="kw">)</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">str_detect</span><span class="er">(</span><span class="ex">fruit,</span> <span class="st">&quot;^a&quot;</span><span class="kw">)</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">...</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">cat</span>(<span class="fu">readLines</span>(<span class="st">&quot;demo/examples/str_detect.Rd.R&quot;</span>, <span class="at">n =</span> <span class="dv">15</span>), <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>fruit <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;apple&quot;</span>, <span class="st">&quot;banana&quot;</span>, <span class="st">&quot;pear&quot;</span>, <span class="st">&quot;pinapple&quot;</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str_detect</span>(fruit, <span class="st">&quot;a&quot;</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str_detect</span>(fruit, <span class="st">&quot;^a&quot;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>Next, we trace the file by running it (in the patched R interpreter)
 and recording all the calls, using the
 <code>trace_file</code>function:</p>

@@ -90,8 +90,8 @@ To generate a database of values, we need some code to run. One way is to extrac
 
 This will extract all the runnable snippets from the package documentation and tests into the given directory. For example:
 
-```bash
-$ cat demo/examples/str_detect.Rd.R
+```R
+> cat(readLines("demo/examples/str_detect.Rd.R", n = 15), sep = "\n")
 ...
 fruit <- c("apple", "banana", "pear", "pinapple")
 str_detect(fruit, "a")
