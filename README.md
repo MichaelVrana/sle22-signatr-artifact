@@ -14,35 +14,43 @@ To use the artifact:
 2. Experiment with the tool on a small example: see [Experimenting the tool](#experimenting-with-the-tool)
 4. Reproduce the analysis pipeline: see [The analysis pipeline](#the-analysis-pipeline)
 
-## Tool
 
-The tool is packaged as an R library. It is hosted at [https://github.com/PRL-PRG/signatr](https://github.com/PRL-PRG/signatr) and uses the following building blocks:
+The tool is packaged as an R library. It is hosted at [https://github.com/PRL-PRG/signatr](https://github.com/PRL-PRG/signatr).
 
+The artifact is also provided directly on github: https://github.com/PRL-PRG/sle22-signatr-artifact
 
-- [sxpdb](https://github.com/PRL-PRG/sxpdb/): R value database
-- [generatr](https://github.com/reallyTG/generatr): fuzzing utilities
-- [contractr](https://github.com/PRL-PRG/contractr):type signature parsing and checking for R
-- [argtracer](https://github.com/PRL-PRG/argtracer): trace R values using a patched R interpreter and store them in the R value database.
+You can get it by entering the following commands in a shell:
 
-The tool and its dependencies are pre-installed in a convenient Docker image.
+```bash
+$ git clone git@github.com:PRL-PRG/sle22-signatr-artifact.git
+```
 
 ## Install the docker image
 
-You can:
+Go in the artifact's folder:
+
+```bash
+$ cd sle22-signatr-artifact
+```
+
+To install the docker image, you can:
 
 - pull the docker image with `docker pull prlprg/sle22-signatr`, or
 - build the docker image (it takes time!): 
 
 ```bash
-cd docker-image
-make
+$ cd docker-image
+$ make
 ```
 
 After installing the docker image, **make sure** to run all the following commands in a shell
-inside the docker image (for Linux, macOS) from the artifact directory. To start the docker image:
+inside the docker image (for Linux, macOS) from the artifact directory.
+
+ To start the docker image, go back to the root directory of the artifact and enter:
 
 ```bash
 ./enter
+```
 
 which should give you a bash shell prompt, like (modulo the hostname):
 
@@ -59,11 +67,14 @@ Run the R interpreter *inside the docker image*. It will start the patched R int
 In the following listings, `$` indicates the shell and `>` denotes the R REPL.
 
 ```bash
+$ R
 R version 4.0.2 (2020-06-22) -- "Taking Off again"
 ...
 
 > library(signatr)
 ```
+
+All following commands and instructions should be run in the docker container.
 
 ### Database
 
@@ -90,7 +101,7 @@ str_detect(fruit, "^a")
 Next, we trace the file by running it (in the patched R interpreter) and recording all the calls, using the `trace_file`function:
 
 ```R
-trace_file("demo/examples/str_detect.Rd.R", db_path = "demo.sxpdb")
+> trace_file("demo/examples/str_detect.Rd.R", db_path = "demo.sxpdb")
 
         status time                          file    db_path db_size error
 elapsed      0 0.04 demo/examples/str_detect.Rd.R demo.sxpdb      20    NA
@@ -103,7 +114,7 @@ The database generation is also automated in the `pipeline-dbgen` directory in t
 Once the database is ready, we can start fuzzing the `str_detect` function of the `stringr` package:
 
 ```R
-R <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 100, action = "infer")
+> R <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 100, action = "infer")
 
     started a new runner:PROCESS 'R', running, pid 4157
     fuzzing stringr:::str_detect [======] 100/100 (100%) 39s
@@ -140,7 +151,7 @@ with an inferred signature. The `args_idx` column contains the indices of the va
 One advantage of using R is that we can use R's many data analysis functions. For example, we can look at the resulting signatures:
 
 ```R
-> count(R, result)
+> dplyr::count(R, result)
 # A tibble: 4 x 2
    result                                                   n
    <chr>                                                  <int>
