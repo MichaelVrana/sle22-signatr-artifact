@@ -101,7 +101,7 @@ details.</p>
 <p>Once the database is ready, we can start fuzzing the
 <code>str_detect</code> function of the <code>stringr</code>
 package:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> R <span class="ot">&lt;-</span> <span class="fu">quick_fuzz</span>(<span class="st">&quot;stringr&quot;</span>, <span class="st">&quot;str_detect&quot;</span>, <span class="st">&quot;demo.sxpdb&quot;</span>, <span class="at">budget =</span> <span class="dv">100</span>, <span class="at">action =</span> <span class="st">&quot;infer&quot;</span>)</span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> fuzz_results <span class="ot">&lt;-</span> <span class="fu">quick_fuzz</span>(<span class="st">&quot;stringr&quot;</span>, <span class="st">&quot;str_detect&quot;</span>, <span class="st">&quot;demo.sxpdb&quot;</span>, <span class="at">budget =</span> <span class="dv">100</span>, <span class="at">action =</span> <span class="st">&quot;infer&quot;</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    started a new runner<span class="sc">:</span>PROCESS <span class="st">&#39;R&#39;</span>, running, pid <span class="dv">4157</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    fuzzing stringr<span class="sc">:::</span>str_detect [<span class="sc">==</span><span class="er">====</span>] <span class="dv">100</span><span class="sc">/</span><span class="dv">100</span> (<span class="dv">100</span>%) 39s</span>
@@ -111,7 +111,7 @@ and return value using the type annotation language described in <a
 href="https://dl.acm.org/doi/abs/10.1145/3428249">Designing types for R,
 empirically</a>. It returns an R data frame with the inferred call
 signature in the <code>result</code> column:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">print</span>(R)</span>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">print</span>(fuzz_results)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 100 x 6</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>args_idx      error               status result          time</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="sc">&lt;</span>list<span class="sc">&gt;</span>        <span class="er">&lt;</span>chr<span class="sc">&gt;</span>               <span class="er">&lt;</span>int<span class="sc">&gt;</span>  <span class="er">&lt;</span>chr<span class="sc">&gt;</span>           <span class="er">&lt;</span>drtn<span class="sc">&gt;</span></span>
@@ -131,7 +131,7 @@ looking up the <code>args_idx</code> in the database:</p>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> <span class="fu">close</span>(db)</span></code></pre></div>
 <p>One advantage of using R is that we can use R’s many data analysis
 functions. For example, we can look at the resulting signatures:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> dplyr<span class="sc">::</span><span class="fu">count</span>(R, result)</span>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="sc">&gt;</span> dplyr<span class="sc">::</span><span class="fu">count</span>(fuzz_results, result)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># A tibble: 4 x 2</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>   result                                                   n</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>   <span class="sc">&lt;</span>chr<span class="sc">&gt;</span>                                                  <span class="er">&lt;</span>int<span class="sc">&gt;</span></span>

@@ -115,7 +115,7 @@ The database generation is also automated in the `pipeline-dbgen` directory in t
 Once the database is ready, we can start fuzzing the `str_detect` function of the `stringr` package:
 
 ```R
-> R <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 100, action = "infer")
+> fuzz_results <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 100, action = "infer")
 
     started a new runner:PROCESS 'R', running, pid 4157
     fuzzing stringr:::str_detect [======] 100/100 (100%) 39s
@@ -127,7 +127,7 @@ language described in [Designing types for R, empirically](https://dl.acm.org/do
 `result` column:
 
 ```R
-> print(R)
+> print(fuzz_results)
 # A tibble: 100 x 6
 args_idx      error               status result          time
 <list>        <chr>               <int>  <chr>           <drtn>
@@ -152,7 +152,7 @@ with an inferred signature. The `args_idx` column contains the indices of the va
 One advantage of using R is that we can use R's many data analysis functions. For example, we can look at the resulting signatures:
 
 ```R
-> dplyr::count(R, result)
+> dplyr::count(fuzz_results, result)
 # A tibble: 4 x 2
    result                                                   n
    <chr>                                                  <int>
