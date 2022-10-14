@@ -28,7 +28,25 @@ create_tags("experiment-uf.tex", prefix = "UF", default = TRUE)
 First, we load all the traces:
 
 ```{r load data}
-all_traces_raw <- traces_load("data/all-traces.qs")
+FILE_ALL_TRACES <- "data/preprocessed/all-traces.qs"
+
+if (!dir.exists(dirname(FILE_ALL_TRACES))) {
+  dir.create(dirname(FILE_ALL_TRACES), recursive = TRUE)
+}
+
+if (file.exists(FILE_ALL_TRACES)) {
+  all_traces_raw <- qs::qread(FILE_ALL_TRACES)
+} else {
+  all_traces_raw <- 
+    pblapply(list.files("data/fuzz", pattern = ".*::.*", full.names = TRUE, recursive = FALSE), function(x) {
+      df <- qs::qread(x)
+      dplyr::mutate(df, rdb_path = file.path("..", "rdb", basename(x)))
+    }) %>%
+    bind_rows()
+
+  qs::qsave(all_traces_raw, FILE_ALL_TRACES)
+}
+
 all_traces_stats <- traces_stats(all_traces_raw) %>%
   mutate(pkg=str_replace(fun_name, "(.*)::.*", "\\1"))
 
@@ -54,7 +72,6 @@ traces_stats_summary <- summary(traces_stats)
 
 ```{r info about fuzzing}
 overview_table(
-  r("Tracing budget", 5000),
   r("Num traces", all_traces),
   r("Num success traces", traces),
   r("Ratio sucesss traces", ratio(traces, all_traces)),

@@ -316,15 +316,6 @@ shall show results for a function `arg_name` from `dplyr` package:
 It indicates 7 failed calls and 3 good ones.
 Please note that due to random sampling your results will likely be different.
 
-To simplify, we merge all the individual trace files into one using:
-
-```sh
-./fix-fuzz-rdb.R
-./merge-traces.R
-```
-
-which should create `data/all-traces.qs` file with properly adjusted paths.
-
 ### 3. type the results
 
 To type the traces, run the following:
