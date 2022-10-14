@@ -65,6 +65,7 @@ RUN git clone https://github.com/PRL-PRG/contractr && \
   make -C contractr install
 
 # install sxpdb
+ARG SXPDB_VERSION=unknown
 RUN git clone https://github.com/PRL-PRG/sxpdb  && \
   make -C sxpdb install
 
@@ -81,6 +82,7 @@ RUN git clone https://github.com/PRL-PRG/runr && \
   make -C runr install
 
 # install signatr
+ARG SIGNATR_VERSION=unknown
 RUN git clone https://github.com/PRL-PRG/signatr && \
   make -C signatr install
 
