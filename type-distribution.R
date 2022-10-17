@@ -7,16 +7,17 @@ library(sxpdb)
 compute_type_distribution <- function() {
   db <- open_db("data/cran_db", q=F)
   
-  q_int <- query_from_plan(type = 3L)
-  q_list <- query_from_plan(type = list(4))
-  q_logical <- query_from_plan(type = TRUE)
-  q_real <- query_from_plan(type = 3)
-  q_string <- query_from_plan(type = "hello world")
+  q_int <- query_from_plan(list(type = 3L))
+  q_list <- query_from_plan(list(type = list(4)))
+  q_logical <- query_from_plan(list(type = TRUE))
+  q_real <- query_from_plan(list(type = 3))
+  q_string <- query_from_plan(list(type = "hello world"))
   
   n_int <- nb_values_db(db, q_int)
   n_list <- nb_values_db(db, q_list)
   n_logical <- nb_values_db(db, q_logical)
   n_real <- nb_values_db(db, q_real)
+  n_string <- nb_values_db(db, q_string)
   nb_values <- size_db(db)  
   
   df <- tribble(~type, ~n, ~pc,
@@ -34,6 +35,6 @@ compute_type_distribution <- function() {
 }
 
 if(sys.nframe() == 0L) {
-  compute_type_distribution
+  compute_type_distribution()
 }
 
