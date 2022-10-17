@@ -18,13 +18,14 @@ compute_type_distribution <- function() {
   n_logical <- nb_values_db(db, q_logical)
   n_real <- nb_values_db(db, q_real)
   n_string <- nb_values_db(db, q_string)
-  nb_values <- size_db(db)  
+  nb_values <- size_db(db) 
+  n_others <- nb_values - (n_int + n_list + n_logical + n_string + n_real)
   
   df <- tribble(~type, ~n, ~pc,
                 "Integer", n_int, n_int / nb_values * 100,
                 "List", n_list, n_list / nb_values * 100,
                 "Logical", n_logical, n_logical / nb_values * 100,
-                "Others", (nb_values - (n_int + n_list + n_logical + n_string + n_real)) / nb_values * 100,
+                "Others",  n_otehrs, n_others / nb_values * 100,
                 "Real", n_real, n_real / nb_values * 100,
                 "String", n_string, n_string / nb_values * 100
   )
