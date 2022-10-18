@@ -286,7 +286,7 @@ overview_table(
 
 ```{r cbPalette}
 # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
-cbPalette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7","#999999")
+cbPalette <- c("#E69F00", "#999999",  "#009E73" , "#56B4E9", "#0072B2", "#D55E00", "#F0E442", "#0072B2")
 ```
 
 
