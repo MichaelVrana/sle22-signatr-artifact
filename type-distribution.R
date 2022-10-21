@@ -23,11 +23,11 @@ compute_type_distribution <- function() {
   
   df <- tribble(~type, ~n, ~pc,
                 "Integer", n_int, n_int / nb_values * 100,
+                "String", n_string, n_string / nb_values * 100,
                 "List", n_list, n_list / nb_values * 100,
                 "Logical", n_logical, n_logical / nb_values * 100,
-                "Others",  n_otehrs, n_others / nb_values * 100,
                 "Real", n_real, n_real / nb_values * 100,
-                "String", n_string, n_string / nb_values * 100
+                "Others",  n_others, n_others / nb_values * 100
   )
   
   qs::qsave(df, "data/type-distribution.qs")
