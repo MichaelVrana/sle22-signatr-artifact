@@ -426,9 +426,10 @@ Finally, to render the results, run:
 R --slave --quiet -e 'rmarkdown::render("sle.Rmd")'
 ```
 This should create a file `sle.html` which you can open in a browser (navigate to the directory where you run the `./enter.sh`).
-It also creates two more files:
+It also creates three more files:
 - `experiment-uf.tex` the data for the paper
-- `uf-call-signatures.pdf` the figure 4 in the paper
+- `argsdb-value-distribution.pdf` figure 3 in the paper
+- `uf-call-signatures.pdf`  figure 4 in the paper
 
 ---
 

@@ -316,6 +316,7 @@ ggplot(type_distribution, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=type)) 
   theme_void() +
   theme(legend.position = c(0.5,0.5))
 
+ggsave("argsdb-value-distribution.pdf", height = 6)
 ```
 
 ```{r figure 4}
