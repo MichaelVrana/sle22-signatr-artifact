@@ -144,7 +144,7 @@ with an inferred signature. The `args_idx` column contains the indices of the va
 ```R
 > library(sxpdb)
 > db <- open_db("demo.sxpdb")
-> get_val_idx(db, 0) # value at index 0
+> get_value_idx(db, 0) # value at index 0
 [1] "a"
 > close(db)
 ```
