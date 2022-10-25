@@ -115,7 +115,7 @@ The database generation is also automated in the `pipeline-dbgen` directory in t
 Once the database is ready, we can start fuzzing the `str_detect` function of the `stringr` package:
 
 ```R
-> fuzz_results <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 100, action = "infer")
+> fuzz_results <- quick_fuzz("stringr", "str_detect", "demo.sxpdb", budget = 1000, action = "infer")
 
     started a new runner:PROCESS 'R', running, pid 4157
     fuzzing stringr:::str_detect [======] 100/100 (100%) 39s
@@ -128,7 +128,7 @@ language described in [Designing types for R, empirically](https://dl.acm.org/do
 
 ```R
 > print(fuzz_results)
-# A tibble: 100 x 6
+# A tibble: 1000 x 6
 args_idx      error               status result          time
 <list>        <chr>               <int>  <chr>           <drtn>
 1 <int [3]> "Error in UseMeth...   1       NA            0.0363
@@ -138,7 +138,20 @@ args_idx      error               status result          time
 If you are repeating these steps, it is possible that your results will be different since fuzzing is non-deterministic.
 
 The listing shows two calls: a failed one (non-zero status) with an error message, and a successful one
-with an inferred signature. The `args_idx` column contains the indices of the values of the arguments in
+with an inferred signature. 
+
+You can find all the successful calls for your run of the fuzzer:
+
+```R
+> dplyr::filter(fuzz_results, status == 0)
+# A tibble: 68 × 7
+args_idx  error  exit status dispatch         result                 ts      
+<list>    <chr> <int>  <int> <list>           <chr>                  <drtn>  
+1 <int [3]> NA       NA      0 <named list [3]> (character, character… 0.04049…
+2 <int [3]> NA       NA      0 <named list [3]> (logical[], character… 0.03812…
+```
+
+The `args_idx` column contains the indices of the values of the arguments in
  the database: the actual argument values can be obtained by looking up the `args_idx` in the database:
 
 ```R
