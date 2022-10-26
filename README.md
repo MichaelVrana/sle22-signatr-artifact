@@ -61,6 +61,19 @@ r@eaf63037fd02:/work$
 
 It automatically mounts the content of the folder from which you run the command into the `/work` directory in the container.
 
+If you see an output like:
+
+```
+Starting Xvfb...
+There is something wrong with the Xvfb server.
+```
+
+try to run it `NO_X11` environment variable set:
+
+```
+NO_X11=1 ./enter.sh
+```
+
 ## Experimenting with the tool
 
 Run the R interpreter *inside the docker image*. It will start the patched R interpreter. The tool *does not run* in the standard R interpreter.
