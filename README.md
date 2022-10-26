@@ -65,6 +65,10 @@ It automatically mounts the content of the folder from which you run the command
 
 Run the R interpreter *inside the docker image*. It will start the patched R interpreter. The tool *does not run* in the standard R interpreter.
 
+The following is the screen cast that shows all the commands executed:
+
+[![asciicast](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO.svg)](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO)
+
 In the following listings, `$` indicates the shell and `>` denotes the R REPL.
 
 ```bash
