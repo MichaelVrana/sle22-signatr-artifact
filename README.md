@@ -67,7 +67,7 @@ Run the R interpreter *inside the docker image*. It will start the patched R int
 
 The following is the screen cast that shows all the commands executed:
 
-[![asciicast](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO.svg)](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO)
+[![asciicast](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO.svg)](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO?idleTimeLimit=1)
 
 In the following listings, `$` indicates the shell and `>` denotes the R REPL.
 
