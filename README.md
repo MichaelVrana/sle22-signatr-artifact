@@ -127,28 +127,36 @@ language described in [Designing types for R, empirically](https://dl.acm.org/do
 `result` column:
 
 ```R
-> print(fuzz_results)
-# A tibble: 1000 x 6
-args_idx      error               status result          time
-<list>        <chr>               <int>  <chr>           <drtn>
-1 <int [3]> "Error in UseMeth...   1       NA            0.0363
-2 <int [3]>  NA                    0    (character[],... 0.0351
+> fuzz_results
+# A tibble: 1,000 × 7
+   args_idx  error                         exit status dispatch     result ts
+   <list>    <chr>                        <int>  <int> <list>       <chr>  <drt>
+ 1 <int [3]> "Error in UseMethod(\"type\…    NA      1 <named list> NA     0.04…
+ 2 <int [3]> "Error in stri_detect_regex…    NA      1 <named list> NA     0.04…
+ 3 <int [3]>  NA                             NA      0 <named list> (logi… 0.04…
 ```
 
 If you are repeating these steps, it is possible that your results will be different since fuzzing is non-deterministic.
 
-The listing shows two calls: a failed one (non-zero status) with an error message, and a successful one
+The listing shows three calls: two failed ones (non-zero status) with an error message, and a successful one
 with an inferred signature. 
 
 You can find all the successful calls for your run of the fuzzer:
-
 ```R
 > dplyr::filter(fuzz_results, status == 0)
-# A tibble: 68 × 7
-args_idx  error  exit status dispatch         result                 ts      
-<list>    <chr> <int>  <int> <list>           <chr>                  <drtn>  
-1 <int [3]> NA       NA      0 <named list [3]> (character, character… 0.04049…
-2 <int [3]> NA       NA      0 <named list [3]> (logical[], character… 0.03812…
+# A tibble: 112 × 7
+   args_idx  error  exit status dispatch         result                    ts
+   <list>    <chr> <int>  <int> <list>           <chr>                     <drt>
+ 1 <int [3]> NA       NA      0 <named list [3]> (logical, character, log… 0.04…
+ 2 <int [3]> NA       NA      0 <named list [3]> (character, character, l… 0.04…
+ 3 <int [3]> NA       NA      0 <named list [3]> (character, character, d… 0.04…
+ 4 <int [3]> NA       NA      0 <named list [3]> (logical, character, log… 0.04…
+ 5 <int [3]> NA       NA      0 <named list [3]> (logical[], character, l… 0.04…
+ 6 <int [3]> NA       NA      0 <named list [3]> (character, character, l… 0.04…
+ 7 <int [3]> NA       NA      0 <named list [3]> (character, character, d… 0.04…
+ 8 <int [3]> NA       NA      0 <named list [3]> (logical[], character, d… 0.04…
+ 9 <int [3]> NA       NA      0 <named list [3]> (logical[], character, d… 0.04…
+10 <int [3]> NA       NA      0 <named list [3]> (logical[], character, d… 0.04…
 ```
 
 The `args_idx` column contains the indices of the values of the arguments in
@@ -166,18 +174,32 @@ One advantage of using R is that we can use R's many data analysis functions. Fo
 
 ```R
 > dplyr::count(fuzz_results, result)
-# A tibble: 4 x 2
-   result                                                   n
-   <chr>                                                  <int>
-1 (character[], ^character[], double) => ^logical[]         1
-2 (character[], character, integer) => logical[]            1
-3 (list<integer>, character[], list<integer>) => logical[]  1
-4 NA                                                        97
+# A tibble: 20 × 2
+   result                                             n
+   <chr>                                          <int>
+ 1 NA                                               888
+ 2 (character, character, logical) => logical        28
+ 3 (character, character, double) => logical         21
+ 4 (character, character, logical[]) => logical[]    10
+ 5 (logical, character, logical) => logical           7
+ 6 (logical[], character, logical) => logical[]       7
+ 7 (null, character, logical) => logical[]            7
+ 8 (logical, character, double) => logical            5
+ 9 (logical[], character, double) => logical[]        5
+10 (character[], character, logical) => logical[]     4
+11 (character[], character, double) => logical[]      3
+12 (double, character, logical) => logical            3
+13 (null, character, logical[]) => logical[]          3
+14 (character, character[], logical) => logical[]     2
+15 (null, character[], logical) => logical[]          2
+16 (character, character[], double) => logical[]      1
+17 (double, character, double) => logical             1
+18 (double, character, logical[]) => logical[]        1
+19 (logical, character[], logical) => logical[]       1
+20 (logical[], character, logical[]) => logical[]     1
 ```
 This shows that in 3 cases, the fuzzer managed to generate a call that was successful, and
  so the signatures of those calls.
-
-
 
 ## The analysis pipeline
 
