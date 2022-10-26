@@ -2,12 +2,17 @@
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
+GENERATR_VERSION := $(shell 2>/dev/null curl -s https://api.github.com/repos/reallyTG/generatr/commits | 2>/dev/null jq -r '.[0].sha')
+ifndef GENERATR_VERSION
+GENERATR_VERSION := $(shell date +%s)
+endif
+
 SIGNATR_VERSION := $(shell 2>/dev/null curl -s https://api.github.com/repos/PRL-PRG/signatr/commits | 2>/dev/null jq -r '.[0].sha')
 ifndef SIGNATR_VERSION
 SIGNATR_VERSION := $(shell date +%s)
 endif
 
-SXPDB_VERSION := $(shell 2>/dev/null curl -s https://api.github.com/repos/PRL-PRG/signatr/commits | 2>/dev/null jq -r '.[0].sha')
+SXPDB_VERSION := $(shell 2>/dev/null curl -s https://api.github.com/repos/PRL-PRG/sxpdb/commits | 2>/dev/null jq -r '.[0].sha')
 ifndef SXPDB_VERSION
 SXPDB_VERSION := $(shell date +%s)
 endif
@@ -22,6 +27,7 @@ image:
 	docker build \
 		--rm \
 		--build-arg SIGNATR_VERSION=$(SIGNATR_VERSION) \
+		--build-arg GENERATR_VERSION=$(GENERATR_VERSION) \
 		--build-arg SXPDB_VERSION=$(SXPDB_VERSION) \
 		-t $(DOCKER_IMAGE_NAME) .
 
