@@ -228,6 +228,19 @@ The reason is that the size of the data require is fairly large. For example, ju
 Also one would have to download and install all the packages and their dependencies which again takes space and time.
 If you are however interested and have the computational resource, we will be happy to share the data, please contact the AEC chair.
 
+There is also a screen cast for this part of the artifact.
+However, due to a size limitations, it is not possible to share it directly on [asciinema.org](https://asciinema.org/).
+Instead, it is in a compressed for in the `assets` directory.
+To replay it locally (assuming you have installed the `asciinema` tool), please do the following steps:
+
+```sh
+cd assets
+unxz screencast-pipeline.asciinema.xz
+asciinema play -i 1 -s 10 screencast-pipeline.asciinema
+```
+
+That will play it 10x the actual speed, limiting the idle time to 1 second.
+
 ---
 
 **Note**:
@@ -367,6 +380,7 @@ shall show results for a function `arg_name` from `dplyr` package:
 
 It indicates 7 failed calls and 3 good ones.
 Please note that due to random sampling your results will likely be different.
+It is also possible that there will not be any `data/fuzz/dplyr::arg_name` file as the functions are selected randomly.
 
 ### 3. type the results
 
