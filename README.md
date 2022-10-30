@@ -61,6 +61,9 @@ r@eaf63037fd02:/work$
 
 It automatically mounts the content of the folder from which you run the command into the `/work` directory in the container.
 
+Some have reported problems with `./enter.sh`; we also provide another invocation script for Docker `./enter2.sh` to run in case. That one does 
+set up permissions so you will have to do `sudo` for Step 6.
+
 ## Experimenting with the tool
 
 Run the R interpreter *inside the docker image*. It will start the patched R interpreter. The tool *does not run* in the standard R interpreter.
