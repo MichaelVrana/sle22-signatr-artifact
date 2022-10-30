@@ -61,12 +61,29 @@ r@eaf63037fd02:/work$
 
 It automatically mounts the content of the folder from which you run the command into the `/work` directory in the container.
 
-Some have reported problems with `./enter.sh`; we also provide another invocation script for Docker `./enter2.sh` to run in case. That one does 
-set up permissions so you will have to do `sudo` for Step 6.
+
+If you see an output like:
+
+```
+Starting Xvfb...
+There is something wrong with the Xvfb server.
+```
+
+try to run it `NO_X11` environment variable set:
+
+```
+NO_X11=1 ./enter.sh
+```
+
+We also provide a shorter invocation script for Docker `./enter2.sh` to run if it still does not work. That one does not set up permissions so you will have to do `sudo` for Step 6 in [The analysis pipeline](#the-analysis-pipeline) section.
 
 ## Experimenting with the tool
 
 Run the R interpreter *inside the docker image*. It will start the patched R interpreter. The tool *does not run* in the standard R interpreter.
+
+The following is the screen cast that shows all the commands executed:
+
+[![asciicast](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO.svg)](https://asciinema.org/a/YxDDCvg4SUeEzzUKhfKcDLrCO?idleTimeLimit=1)
 
 In the following listings, `$` indicates the shell and `>` denotes the R REPL.
 
@@ -130,28 +147,36 @@ language described in [Designing types for R, empirically](https://dl.acm.org/do
 `result` column:
 
 ```R
-> print(fuzz_results)
-# A tibble: 1000 x 6
-args_idx      error               status result          time
-<list>        <chr>               <int>  <chr>           <drtn>
-1 <int [3]> "Error in UseMeth...   1       NA            0.0363
-2 <int [3]>  NA                    0    (character[],... 0.0351
+> fuzz_results
+# A tibble: 1,000 × 7
+   args_idx  error                         exit status dispatch     result ts
+   <list>    <chr>                        <int>  <int> <list>       <chr>  <drt>
+ 1 <int [3]> "Error in UseMethod(\"type\…    NA      1 <named list> NA     0.04…
+ 2 <int [3]> "Error in stri_detect_regex…    NA      1 <named list> NA     0.04…
+ 3 <int [3]>  NA                             NA      0 <named list> (logi… 0.04…
 ```
 
 If you are repeating these steps, it is possible that your results will be different since fuzzing is non-deterministic.
 
-The listing shows two calls: a failed one (non-zero status) with an error message, and a successful one
+The listing shows three calls: two failed ones (non-zero status) with an error message, and a successful one
 with an inferred signature. 
 
 You can find all the successful calls for your run of the fuzzer:
-
 ```R
 > dplyr::filter(fuzz_results, status == 0)
-# A tibble: 68 × 7
-args_idx  error  exit status dispatch         result                 ts      
-<list>    <chr> <int>  <int> <list>           <chr>                  <drtn>  
-1 <int [3]> NA       NA      0 <named list [3]> (character, character… 0.04049…
-2 <int [3]> NA       NA      0 <named list [3]> (logical[], character… 0.03812…
+# A tibble: 112 × 7
+   args_idx  error  exit status dispatch         result                    ts
+   <list>    <chr> <int>  <int> <list>           <chr>                     <drt>
+ 1 <int [3]> NA       NA      0 <named list [3]> (logical, character, log… 0.04…
+ 2 <int [3]> NA       NA      0 <named list [3]> (character, character, l… 0.04…
+ 3 <int [3]> NA       NA      0 <named list [3]> (character, character, d… 0.04…
+ 4 <int [3]> NA       NA      0 <named list [3]> (logical, character, log… 0.04…
+ 5 <int [3]> NA       NA      0 <named list [3]> (logical[], character, l… 0.04…
+ 6 <int [3]> NA       NA      0 <named list [3]> (character, character, l… 0.04…
+ 7 <int [3]> NA       NA      0 <named list [3]> (character, character, d… 0.04…
+ 8 <int [3]> NA       NA      0 <named list [3]> (logical[], character, d… 0.04…
+ 9 <int [3]> NA       NA      0 <named list [3]> (logical[], character, d… 0.04…
+10 <int [3]> NA       NA      0 <named list [3]> (logical[], character, d… 0.04…
 ```
 
 The `args_idx` column contains the indices of the values of the arguments in
@@ -169,18 +194,32 @@ One advantage of using R is that we can use R's many data analysis functions. Fo
 
 ```R
 > dplyr::count(fuzz_results, result)
-# A tibble: 4 x 2
-   result                                                   n
-   <chr>                                                  <int>
-1 (character[], ^character[], double) => ^logical[]         1
-2 (character[], character, integer) => logical[]            1
-3 (list<integer>, character[], list<integer>) => logical[]  1
-4 NA                                                        97
+# A tibble: 20 × 2
+   result                                             n
+   <chr>                                          <int>
+ 1 NA                                               888
+ 2 (character, character, logical) => logical        28
+ 3 (character, character, double) => logical         21
+ 4 (character, character, logical[]) => logical[]    10
+ 5 (logical, character, logical) => logical           7
+ 6 (logical[], character, logical) => logical[]       7
+ 7 (null, character, logical) => logical[]            7
+ 8 (logical, character, double) => logical            5
+ 9 (logical[], character, double) => logical[]        5
+10 (character[], character, logical) => logical[]     4
+11 (character[], character, double) => logical[]      3
+12 (double, character, logical) => logical            3
+13 (null, character, logical[]) => logical[]          3
+14 (character, character[], logical) => logical[]     2
+15 (null, character[], logical) => logical[]          2
+16 (character, character[], double) => logical[]      1
+17 (double, character, double) => logical             1
+18 (double, character, logical[]) => logical[]        1
+19 (logical, character[], logical) => logical[]       1
+20 (logical[], character, logical[]) => logical[]     1
 ```
 This shows that in 3 cases, the fuzzer managed to generate a call that was successful, and
  so the signatures of those calls.
-
-
 
 ## The analysis pipeline
 
@@ -191,6 +230,19 @@ In this write up, we will run it on a small subset of the original packages (cf.
 The reason is that the size of the data require is fairly large. For example, just the value database is over 287GB and its generation take over half a day (on a 72 core Intel Xeon 6140 2.30GHz server).
 Also one would have to download and install all the packages and their dependencies which again takes space and time.
 If you are however interested and have the computational resource, we will be happy to share the data, please contact the AEC chair.
+
+There is also a screen cast for this part of the artifact.
+However, due to a size limitations, it is not possible to share it directly on [asciinema.org](https://asciinema.org/).
+Instead, it is in a compressed for in the `assets` directory.
+To replay it locally (assuming you have installed the `asciinema` tool), please do the following steps:
+
+```sh
+cd assets
+unxz screencast-pipeline.asciinema.xz
+asciinema play -i 1 -s 10 screencast-pipeline.asciinema
+```
+
+That will play it 10x the actual speed, limiting the idle time to 1 second.
 
 ---
 
@@ -331,6 +383,7 @@ shall show results for a function `arg_name` from `dplyr` package:
 
 It indicates 7 failed calls and 3 good ones.
 Please note that due to random sampling your results will likely be different.
+It is also possible that there will not be any `data/fuzz/dplyr::arg_name` file as the functions are selected randomly.
 
 ### 3. type the results
 

@@ -31,7 +31,7 @@ if [ -z "$NO_X11" ]; then
     export DISPLAY=$local_display
     if ! xdpyinfo &>/dev/null; then
         echo "There is something wrong with the Xvfb server." >&2
-        exit 1
+        echo "Some R code that needs framebuffer might not work properly." >&2
     else
         echo "DISPLAY=\"$DISPLAY\"" >> $ENV_FILE
     fi

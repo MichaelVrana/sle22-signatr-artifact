@@ -74,6 +74,7 @@ RUN git clone -b call-ids https://github.com/PRL-PRG/argtracer && \
   make -C argtracer install
 
 # install generatr
+ARG GENERATR_VERSION=unknown
 RUN git clone https://github.com/reallyTG/generatr  && \
   make -C generatr install
 
