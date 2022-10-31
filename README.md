@@ -50,7 +50,7 @@ inside the docker image (for Linux, macOS) from the artifact directory.
  and enter in a shell:
 
 ```bash
-./enter
+./enter.sh
 ```
 
 which should give you a bash shell prompt, like (modulo the hostname):
