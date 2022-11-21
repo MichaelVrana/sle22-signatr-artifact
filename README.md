@@ -1,3 +1,6 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7342082.svg)](https://doi.org/10.5281/zenodo.7342082)
+
+
 # Signatr Artifact
 
 **We also provide  pdf and html versions of this README. If reading locally and not on [github](https://github.com/PRL-PRG/sle22-signatr-artifact), we advise to use the html version.**
