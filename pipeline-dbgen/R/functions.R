@@ -1,3 +1,18 @@
+lib_path <- normalizePath("../data/library", mustWork = TRUE)
+output_path <- "output"
+extracted_output <- file.path(output_path, "extracted-code")
+sxpdb_output <- file.path(output_path, "sxpdb")
+
+packages_file <- "../data/packages.txt"
+blacklist_file <- "blacklist.txt"
+db_blacklist_file <- "db-blacklist.txt"
+
+r_envir <- c(callr::rcmd_safe_env(),
+            "R_KEEP_PKG_SOURCE"=1,
+            "R_ENABLE_JIT"=0,
+            "R_COMPILE_PKGS"=0,
+            "R_DISABLE_BYTECODE"=1) # that one is a 10x performance hit!
+
 install_cran_packages <- function(packages_to_install,
                                   lib = NULL,
                                   destdir = NULL,
@@ -46,7 +61,7 @@ install_cran_packages <- function(packages_to_install,
     },
     list(missing),
     libpath = lib_path,
-    arch = "../R-dyntrace/bin/R",
+    arch = "/R/R-dyntrace/bin/R",
     show = TRUE,
     env = r_envir
   )
@@ -132,14 +147,14 @@ trace_file <- function(file_path, lib_path, output_path) {
     },
     list(file_path, db_path),
     libpath = lib_path,
-    arch = normalizePath("../R-dyntrace/bin/R", mustWork = TRUE),
+    arch = normalizePath("/R/R-dyntrace/bin/R", mustWork = TRUE),
     show = TRUE,
     env = r_envir,
     wd = dirname(file_path)
   )
 }
 
-run_file <- function(file_path, lib_path, r_home = "../R-dyntrace") {
+run_file <- function(file_path, lib_path, r_home = "/R/R-dyntrace") {
   # Put the right arch, the right libPaths and so on
   res <- callr::rcmd(
     "BATCH",
@@ -156,7 +171,7 @@ run_file <- function(file_path, lib_path, r_home = "../R-dyntrace") {
   )
 }
 
-run_file2 <- function(file_path, lib_path,r_home = "../R-dyntrace") {
+run_file2 <- function(file_path, lib_path,r_home = "/R/R-dyntrace") {
   r_bin <- normalizePath(file.path(r_home, "bin", "R"), mustWork = TRUE)
   # Put the right arch, the right libPaths and so on
   status <- tryCatch({

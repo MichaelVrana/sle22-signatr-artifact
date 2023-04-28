@@ -7,7 +7,7 @@ source("R/functions.R")
 options(tidyverse.quiet = TRUE)
 options(future.wait.timeout = 15 * 60) # do not allow more than 15min for each task
 
-lib_path = normalizePath("../library", mustWork = TRUE)
+lib_path = normalizePath("../data/library", mustWork = TRUE)
 output_path = "output"
 extracted_output = file.path(output_path, "extracted-code")
 sxpdb_output = file.path(output_path, "sxpdb")

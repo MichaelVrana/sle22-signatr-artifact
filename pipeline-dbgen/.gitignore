@@ -1,0 +1,3 @@
+output/**/*
+_targets/meta/meta
+task_*.qs
