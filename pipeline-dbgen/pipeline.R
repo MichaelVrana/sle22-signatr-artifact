@@ -5,9 +5,15 @@ source("R/functions.R")
 
 read_unique_lines <- function(filename) unique(trimws(read_lines(filename)))
 
+packages_file <- "../data/packages.txt"
+blacklist_file <- "blacklist.txt"
+db_blacklist_file <- "db-blacklist.txt"
+
 packages_to_install <- read_unique_lines(packages_file)
 blacklist <- read_unique_lines(blacklist_file)
 db_blacklist <- read_unique_lines(db_blacklist_file)
+
+gnu_parallel_executor <- make_gnu_parallel_executor()
 
 make_pipeline(
     #
@@ -21,7 +27,8 @@ make_pipeline(
         ),
         body = function(package) {
             extract_code_from_package(package, lib_path, extracted_output)
-        }
+        },
+        executor = gnu_parallel_executor
     ),
     #
     individual_files = stage(

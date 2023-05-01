@@ -2,13 +2,9 @@ library(magrittr)
 library(dplyr)
 
 lib_path <- normalizePath("../data/library", mustWork = TRUE)
-output_path <- "output"
-extracted_output <- file.path(output_path, "extracted-code")
-sxpdb_output <- file.path(output_path, "sxpdb")
-
-packages_file <- "../data/packages.txt"
-blacklist_file <- "blacklist.txt"
-db_blacklist_file <- "db-blacklist.txt"
+output_path <- normalizePath("output")
+extracted_output <- file.path(output_path, "extracted-code") %>% normalizePath(., mustWork = TRUE)
+sxpdb_output <- file.path(output_path, "sxpdb") %>% normalizePath(., mustWork = TRUE)
 
 r_envir <- c(callr::rcmd_safe_env(),
             "R_KEEP_PKG_SOURCE"=1,
