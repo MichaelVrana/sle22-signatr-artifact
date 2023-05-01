@@ -3,12 +3,15 @@ library(readr)
 
 source("R/functions.R")
 
+read_unique_lines <- function(filename) unique(trimws(read_lines(filename)))
+
+packages_to_install <- read_unique_lines(packages_file)
+blacklist <- read_unique_lines(blacklist_file)
+db_blacklist <- read_unique_lines(db_blacklist_file)
+
 make_pipeline(
-    packages_to_install = stage(function() {
-        unique(trimws(read_lines(packages_file)))
-    }),
     #
-    packages_to_run = stage(function(packages_to_install) {
+    packages_to_run = stage(function() {
         install_cran_packages(packages_to_install, lib_path, NULL)
     }),
     #
@@ -18,18 +21,14 @@ make_pipeline(
         ),
         body = function(package) {
             extract_code_from_package(package, lib_path, extracted_output)
-        },
+        }
     ),
-    #
-    blacklist = stage(function() {
-        unique(trimws(read_lines(blacklist_file)))
-    }),
     #
     individual_files = stage(
         inputs = stage_inputs(
             extracted_files = collect(extracted_files) %>% unlist()
         ),
-        body = function(extracted_files, blacklist) {
+        body = function(extracted_files) {
             remove_blacklisted(extracted_files, blacklist)
         }
     ),
@@ -43,17 +42,13 @@ make_pipeline(
         }
     ),
     #
-    db_blacklist = stage(function() {
-        unique(trimws(read_lines(db_blacklist_file)))
-    }),
-    #
     traced_res = stage(function(traced_results) fix_traced_res(traced_results)),
     #
     db_paths = stage(
         inputs = stage_inputs(
             traced_res = collect_df(traced_res)
         ),
-        body = function(traced_res, db_blacklist) {
+        body = function(traced_res) {
             remove_blacklisted(traced_res$db_path, db_blacklist, only_real_paths = TRUE)
         }
     ),

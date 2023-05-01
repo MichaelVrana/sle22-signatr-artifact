@@ -1,3 +1,6 @@
+library(magrittr)
+library(dplyr)
+
 lib_path <- normalizePath("../data/library", mustWork = TRUE)
 output_path <- "output"
 extracted_output <- file.path(output_path, "extracted-code")
